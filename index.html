@@ -60,6 +60,8 @@ body{
 .controls{top:18px;right:20px;display:flex;gap:8px}
 .btn{display:flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--panel-border);color:var(--text);font:500 12.5px 'Inter';padding:9px 14px;border-radius:11px;cursor:pointer;backdrop-filter:blur(14px);transition:background .2s,border-color .2s}
 .btn:hover{background:rgba(255,255,255,0.09);border-color:rgba(255,255,255,0.2)}
+.bic{display:inline-flex;align-items:center;justify-content:center}
+.bic svg{width:16px;height:16px;display:block}
 
 .statbar{bottom:18px;left:20px;right:20px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
@@ -102,9 +104,9 @@ body{
   .tps .s{display:none}
 
   .controls{top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));gap:6px}
-  .btn{padding:10px 12px;font-size:13px;border-radius:10px}
+  .btn{padding:11px;border-radius:10px}
   .btn .blab{display:none}
-  .btn .bic{font-size:14px}
+  .btn .bic svg{width:18px;height:18px}
 
   .statbar{left:0;right:0;bottom:0;padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:7px;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;align-items:stretch;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .statbar::-webkit-scrollbar{display:none}
@@ -153,8 +155,8 @@ body{
 </div>
 
 <div class="hud controls">
-  <button class="btn" id="pauseBtn" aria-label="Pause"><span class="bic">⏸</span><span class="blab">Pause</span></button>
-  <button class="btn" id="fsBtn" aria-label="Toggle fullscreen"><span class="bic">⛶</span><span class="blab">Fullscreen</span></button>
+  <button class="btn" id="pauseBtn" aria-label="Pause"><span class="bic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.4"/><rect x="13.5" y="5" width="4" height="14" rx="1.4"/></svg></span><span class="blab">Pause</span></button>
+  <button class="btn" id="fsBtn" aria-label="Toggle fullscreen"><span class="bic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4 M15 4h4a1 1 0 0 1 1 1v4 M20 15v4a1 1 0 0 1-1 1h-4 M9 20H5a1 1 0 0 1-1-1v-4"/></svg></span><span class="blab">Fullscreen</span></button>
 </div>
 
 <div class="hud statbar">
@@ -566,9 +568,13 @@ async function run(){
   }
   busy=false;
 }
+const IC_PAUSE='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.4"/><rect x="13.5" y="5" width="4" height="14" rx="1.4"/></svg>';
+const IC_PLAY='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.6c0-.86.94-1.38 1.67-.93l8.7 5.4a1.1 1.1 0 0 1 0 1.86l-8.7 5.4A1.1 1.1 0 0 1 8 18.4z"/></svg>';
+const IC_FS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4 M15 4h4a1 1 0 0 1 1 1v4 M20 15v4a1 1 0 0 1-1 1h-4 M9 20H5a1 1 0 0 1-1-1v-4"/></svg>';
+const IC_EXIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v3a1 1 0 0 1-1 1H4 M16 4v3a1 1 0 0 0 1 1h3 M16 20v-3a1 1 0 0 1 1-1h3 M8 20v-3a1 1 0 0 0-1-1H4"/></svg>';
 $('pauseBtn').addEventListener('click',()=>{
   paused=!paused;
-  $('pauseBtn').querySelector('.bic').textContent=paused?'▶':'⏸';
+  $('pauseBtn').querySelector('.bic').innerHTML=paused?IC_PLAY:IC_PAUSE;
   $('pauseBtn').querySelector('.blab').textContent=paused?'Resume':'Pause';
   $('pauseBtn').setAttribute('aria-label',paused?'Resume':'Pause');
 });
@@ -576,7 +582,11 @@ $('fsBtn').addEventListener('click',()=>{
   if(document.fullscreenElement)document.exitFullscreen();
   else document.documentElement.requestFullscreen();
 });
-document.addEventListener('fullscreenchange',()=>{$('fsBtn').querySelector('.blab').textContent=document.fullscreenElement?'Exit':'Fullscreen';});
+document.addEventListener('fullscreenchange',()=>{
+  const f=!!document.fullscreenElement;
+  $('fsBtn').querySelector('.bic').innerHTML=f?IC_EXIT:IC_FS;
+  $('fsBtn').querySelector('.blab').textContent=f?'Exit':'Fullscreen';
+});
 layout();
 (async function boot(){
   try{
