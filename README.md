@@ -18,14 +18,14 @@ All data comes live from the public Hedera mirror node — no backend, no build 
 It's a single self-contained HTML file. Open it in a browser:
 
 ```sh
-open hedera-live-dashboard.html
+open index.html
 ```
 
 Or serve it locally:
 
 ```sh
 python3 -m http.server 8765
-# then visit http://localhost:8765/hedera-live-dashboard.html
+# then visit http://localhost:8765/
 ```
 
 ### Stress testing
@@ -33,7 +33,7 @@ python3 -m http.server 8765
 Append `?stress=N` to inject `N` synthetic transactions/second on top of live traffic, to see how the visualization behaves under load:
 
 ```
-hedera-live-dashboard.html?stress=1500
+/?stress=1500
 ```
 
 Synthetic traffic is clearly labeled in the status line. Verified to hold 60 fps at 1,500 tx/s with ~4,500 concurrent dots.
