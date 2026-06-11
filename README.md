@@ -1,4 +1,13 @@
-# Hedera Mainnet — Live Traffic
+<p align="center">
+  <img src="og.png" alt="HashStream — live Hedera mainnet traffic" width="760">
+</p>
+
+<h1 align="center">HashStream</h1>
+
+<p align="center">
+  Live, real-time visualization of <a href="https://hedera.com">Hedera</a> mainnet traffic<br>
+  <a href="https://hashstream.app"><strong>hashstream.app</strong></a>
+</p>
 
 A full-screen, real-time visualization of [Hedera](https://hedera.com) mainnet activity. Every transaction reaching consensus becomes a glowing dot flowing across the screen toward a "consensus bar," grouped into lanes by transaction type and sized by the fee paid.
 
