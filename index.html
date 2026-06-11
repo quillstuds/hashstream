@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hedera Mainnet — Live Traffic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@ body{
              radial-gradient(900px 600px at -5% 115%, rgba(52,211,153,0.07), transparent 55%), var(--bg);
 }
 .num{font-family:'Space Grotesk',monospace;font-variant-numeric:tabular-nums}
-#river{position:fixed;inset:0;width:100vw;height:100vh;cursor:default}
+#river{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;cursor:default;touch-action:manipulation}
 
 .hud{position:fixed;z-index:5;pointer-events:none}
 .hud *{pointer-events:auto}
@@ -52,7 +52,7 @@ body{
 #spark{display:block;width:100%;height:34px}
 .caption{position:fixed;bottom:2px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--faint);z-index:4;padding:2px 10px;white-space:nowrap}
 
-#tip{position:fixed;z-index:20;width:300px;padding:14px 16px;border-radius:14px;display:none;background:rgba(13,13,24,0.92);border:1px solid rgba(255,255,255,0.13);backdrop-filter:blur(16px);box-shadow:0 14px 44px rgba(0,0,0,0.55)}
+#tip{position:fixed;z-index:20;width:300px;max-width:calc(100vw - 24px);padding:14px 16px;border-radius:14px;display:none;background:rgba(13,13,24,0.92);border:1px solid rgba(255,255,255,0.13);backdrop-filter:blur(16px);box-shadow:0 14px 44px rgba(0,0,0,0.55)}
 #tip .th{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
 #tip .ty{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
 #tip .ty .sw{width:9px;height:9px;border-radius:3px}
@@ -72,10 +72,34 @@ body{
   .brand h1{font-size:13px}
   .brand p{font-size:10.5px}
 }
+@media(max-width:760px){
+  .brand{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));padding:6px 9px;gap:8px;border-radius:12px}
+  .brand h1{display:none}
+  .brand p span#status{display:none}
+  .hlogo{width:30px;height:30px;font-size:15px;border-radius:9px}
+
+  .tps{top:max(10px,env(safe-area-inset-top));padding:5px 16px 7px}
+  .tps .v{font-size:26px}
+  .tps .l{font-size:8px;letter-spacing:1.2px;margin-top:1px}
+  .tps .s{display:none}
+
+  .controls{top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));gap:6px}
+  .btn{padding:10px 12px;font-size:13px;border-radius:10px}
+  .btn .blab{display:none}
+  .btn .bic{font-size:14px}
+
+  .statbar{left:0;right:0;bottom:0;padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:7px;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;align-items:stretch;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .statbar::-webkit-scrollbar{display:none}
+  .chips{flex-wrap:nowrap;gap:7px}
+  .chip{flex:none;padding:6px 11px;font-size:10px;white-space:nowrap;border-radius:11px}
+  .chip b{font-size:13px}
+  #sparkbox{display:none}
+  .caption{display:none}
+}
 </style>
 </head>
 <body>
-<canvas id="river" role="img" aria-label="Full-screen animated stream of glowing dots, one per real Hedera mainnet transaction, flowing right toward the consensus bar; lanes are transaction types, dot size reflects fee paid; hover a dot to inspect that transaction"></canvas>
+<canvas id="river" role="img" aria-label="Full-screen animated stream of glowing dots, one per real Hedera mainnet transaction, flowing right toward the consensus bar; lanes are transaction types, dot size reflects fee paid; hover or tap a dot to inspect that transaction"></canvas>
 
 <div class="hud brand glass">
   <div class="hlogo">ℏ</div>
@@ -92,8 +116,8 @@ body{
 </div>
 
 <div class="hud controls">
-  <button class="btn" id="pauseBtn">⏸ Pause</button>
-  <button class="btn" id="fsBtn">⛶ Fullscreen</button>
+  <button class="btn" id="pauseBtn" aria-label="Pause"><span class="bic">⏸</span><span class="blab">Pause</span></button>
+  <button class="btn" id="fsBtn" aria-label="Toggle fullscreen"><span class="bic">⛶</span><span class="blab">Fullscreen</span></button>
 </div>
 
 <div class="hud statbar">
@@ -110,7 +134,7 @@ body{
   </div>
 </div>
 
-<p class="caption" id="caption">every transaction is displayed · size = fee · hover to inspect · click to open HashScan</p>
+<p class="caption" id="caption">every transaction is displayed · size = fee · tap or hover a dot to inspect</p>
 
 <div id="tip">
   <div class="th">
@@ -157,8 +181,12 @@ function sprite(color){
   return sprites[color]=s;
 }
 
+const SHORT={CONSENSUSSUBMITMESSAGE:'HCS messages',CONTRACTCALL:'Contract call',ETHEREUMTRANSACTION:'Ethereum tx',CRYPTOCREATEACCOUNT:'Account create',CRYPTOAPPROVEALLOWANCE:'Approve',TOKENASSOCIATE:'Token assoc.',OTHER:'Other'};
+const laneName=l=>isMobile?(SHORT[l.type]||l.label):l.label;
+
 const cv=$('river'),ctx=cv.getContext('2d');
-const LABEL_W=230;
+let LABEL_W=230,isMobile=false;
+const isTouch=matchMedia('(pointer:coarse)').matches||'ontouchstart' in window;
 let TOP=84,BOT=84;
 let W=0,H=0,laneH=120;
 const laneY=i=>TOP+i*laneH+laneH/2;
@@ -172,11 +200,13 @@ window.__fps=0;
 function layout(){
   const dpr=window.devicePixelRatio||1;
   W=innerWidth;H=innerHeight;
+  isMobile=W<=760;
+  LABEL_W=isMobile?138:230;
   cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
   TOP=Math.max(document.querySelector('.brand').getBoundingClientRect().bottom,
-               document.querySelector('.tps').getBoundingClientRect().bottom)+14;
-  BOT=document.querySelector('.statbar').offsetHeight+34;
+               document.querySelector('.tps').getBoundingClientRect().bottom)+(isMobile?12:14);
+  BOT=document.querySelector('.statbar').offsetHeight+(isMobile?14:34);
   laneH=Math.max((H-TOP-BOT)/Math.max(lanes.length,3),46);
   const sp=$('spark'),r=sp.getBoundingClientRect();
   sp.width=Math.round(r.width*dpr);sp.height=Math.round(34*dpr);
@@ -315,9 +345,9 @@ async function poll(){
         const t=fetched[r];
         spawnDot(now,Math.random()*POLL_MS*1.3,t.name,t.charged_tx_fee,null);
       }
-      $('caption').textContent='every transaction is displayed ('+fmtInt(totalNew)+' this cycle) · detailed records for '+fmtInt(fetched.length)+' · hover to inspect';
+      $('caption').textContent='every transaction is displayed ('+fmtInt(totalNew)+' this cycle) · detailed records for '+fmtInt(fetched.length)+' · tap or hover to inspect';
     }else{
-      $('caption').textContent='every transaction is displayed · size = fee · hover to inspect · click to open HashScan';
+      $('caption').textContent='every transaction is displayed · size = fee · tap or hover a dot to inspect';
     }
     spawnQueue.sort((a,b)=>a.at-b.at);
     if(spawnQueue.length>20000)spawnQueue=spawnQueue.slice(-20000);
@@ -352,13 +382,16 @@ function showTip(p){
   const r=tip.getBoundingClientRect();
   let x=p.x+18,y=p.y-r.height/2;
   if(x+r.width>W-12)x=p.x-r.width-18;
+  x=Math.max(12,Math.min(W-r.width-12,x));
   y=Math.max(12,Math.min(H-r.height-12,y));
   tip.style.left=x+'px';tip.style.top=y+'px';
 }
 
-cv.addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
-cv.addEventListener('mouseleave',()=>{mouse.x=mouse.y=-99;});
-cv.addEventListener('click',()=>{if(hoverP&&hoverP.tx)window.open('https://hashscan.io/mainnet/transaction/'+hoverP.tx.transaction_id,'_blank');});
+let lastPointerType='mouse';
+cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;}});
+cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){mouse.x=mouse.y=-99;}});
+cv.addEventListener('pointerdown',e=>{lastPointerType=e.pointerType;if(e.pointerType!=='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;}});
+cv.addEventListener('click',()=>{if(lastPointerType==='mouse'&&hoverP&&hoverP.tx)window.open('https://hashscan.io/mainnet/transaction/'+hoverP.tx.transaction_id,'_blank');});
 $('tip').addEventListener('mouseenter',()=>tipHover=true);
 $('tip').addEventListener('mouseleave',()=>tipHover=false);
 
@@ -371,7 +404,7 @@ function frame(t){
   if(!paused&&W>0){
     displayTps+=((targetTps+STRESS)-displayTps)*Math.min(1,dt*2.5);
     $('s-tps').textContent=fmtNum(displayTps);
-    const startX=LABEL_W-40,endX=W-30;
+    const startX=LABEL_W-(isMobile?6:40),endX=W-(isMobile?14:30);
     const transit=transitSecs();
 
     if(STRESS&&lanes.length){
@@ -407,7 +440,7 @@ function frame(t){
         const p=particles[i];
         if(!p.tx)continue;
         const dx=p.x-mouse.x,dy=p.y-mouse.y;
-        const d=dx*dx+dy*dy,lim=Math.max(p.r*2.5,14);
+        const d=dx*dx+dy*dy,lim=Math.max(p.r*2.5,lastPointerType==='mouse'?14:24);
         if(d<lim*lim&&d<bd){bd=d;best=p;}
       }
     }
@@ -425,12 +458,16 @@ function frame(t){
     }
     ctx.strokeStyle='rgba(255,255,255,0.05)';
     ctx.beginPath();ctx.moveTo(0,TOP+lanes.length*laneH);ctx.lineTo(W,TOP+lanes.length*laneH);ctx.stroke();
+    const lblX=isMobile?13:22;
     for(const l of lanes){
       const ty=laneY(l.i);
-      ctx.fillStyle='rgba(238,240,246,0.9)';ctx.font='500 13px Inter';
-      ctx.fillText(l.label,22,ty-9);
-      ctx.fillStyle='rgba(139,144,165,0.85)';ctx.font='11.5px "Space Grotesk"';
-      ctx.fillText(fmtNum(l.rate+(STRESS?STRESS/lanes.length:0))+' tx/s · '+l.share.toFixed(1)+'% · '+fmtUsd(l.usdHr)+'/hr',22,ty+9);
+      const lr=l.rate+(STRESS?STRESS/lanes.length:0);
+      ctx.fillStyle='rgba(238,240,246,0.9)';ctx.font=isMobile?'500 12px Inter':'500 13px Inter';
+      ctx.fillText(laneName(l),lblX,ty-(isMobile?8:9));
+      ctx.fillStyle='rgba(139,144,165,0.85)';ctx.font=isMobile?'10px "Space Grotesk"':'11.5px "Space Grotesk"';
+      const stats=isMobile?(fmtNum(lr)+'/s · '+l.share.toFixed(0)+'% · '+fmtUsd(l.usdHr)+'/hr')
+                          :(fmtNum(lr)+' tx/s · '+l.share.toFixed(1)+'% · '+fmtUsd(l.usdHr)+'/hr');
+      ctx.fillText(stats,lblX,ty+(isMobile?8:9));
     }
 
     const ringEvery=n>800?Math.ceil(n/400):1;
@@ -472,7 +509,7 @@ function frame(t){
     ctx.globalCompositeOperation='source-over';
     ctx.fillStyle='#a78bfa';
     ctx.shadowColor='#a78bfa';ctx.shadowBlur=16;
-    ctx.beginPath();ctx.roundRect(W-20,TOP,7,Math.max(lanes.length,3)*laneH,3.5);ctx.fill();
+    ctx.beginPath();ctx.roundRect(W-(isMobile?13:20),TOP,isMobile?5:7,Math.max(lanes.length,3)*laneH,3);ctx.fill();
     ctx.shadowBlur=0;
     $('s-watch').textContent=fmtInt(txWatched)+' tx · $'+feesWatched.toFixed(4);
   }
@@ -492,12 +529,17 @@ async function run(){
   }
   busy=false;
 }
-$('pauseBtn').addEventListener('click',()=>{paused=!paused;$('pauseBtn').textContent=paused?'▶ Resume':'⏸ Pause';});
+$('pauseBtn').addEventListener('click',()=>{
+  paused=!paused;
+  $('pauseBtn').querySelector('.bic').textContent=paused?'▶':'⏸';
+  $('pauseBtn').querySelector('.blab').textContent=paused?'Resume':'Pause';
+  $('pauseBtn').setAttribute('aria-label',paused?'Resume':'Pause');
+});
 $('fsBtn').addEventListener('click',()=>{
   if(document.fullscreenElement)document.exitFullscreen();
   else document.documentElement.requestFullscreen();
 });
-document.addEventListener('fullscreenchange',()=>{$('fsBtn').textContent=document.fullscreenElement?'⛶ Exit':'⛶ Fullscreen';});
+document.addEventListener('fullscreenchange',()=>{$('fsBtn').querySelector('.blab').textContent=document.fullscreenElement?'Exit':'Fullscreen';});
 layout();
 (async function boot(){
   try{
