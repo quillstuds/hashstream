@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hedera Mainnet — Live Traffic</title>
+<meta name="theme-color" content="#06060d">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>HashStream — Live Hedera Mainnet Traffic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -27,8 +29,10 @@ body{
 .glass{background:var(--panel);border:1px solid var(--panel-border);border-radius:14px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 
 .brand{top:18px;left:20px;display:flex;align-items:center;gap:11px;padding:10px 16px 10px 11px}
-.hlogo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;font-size:17px;box-shadow:0 0 24px rgba(139,92,246,0.5)}
-.brand h1{font-family:'Space Grotesk';font-size:15px;font-weight:600;letter-spacing:.3px}
+.hlogo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(139,92,246,0.5)}
+.hlogo svg{width:64%;height:64%;display:block}
+.brand h1{font-family:'Space Grotesk';font-size:16.5px;font-weight:500;letter-spacing:-0.3px}
+.brand h1 .accent{font-weight:600;background:linear-gradient(95deg,#8b5cf6,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .brand p{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:1px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);animation:pulse 2s ease-in-out infinite}
 .dot.err{background:var(--red);box-shadow:0 0 9px var(--red)}
@@ -102,9 +106,28 @@ body{
 <canvas id="river" role="img" aria-label="Full-screen animated stream of glowing dots, one per real Hedera mainnet transaction, flowing right toward the consensus bar; lanes are transaction types, dot size reflects fee paid; hover or tap a dot to inspect that transaction"></canvas>
 
 <div class="hud brand glass">
-  <div class="hlogo">ℏ</div>
+  <div class="hlogo">
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <defs>
+        <linearGradient id="hs-stream" x1="6.5" y1="0" x2="33.5" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>
+          <stop offset="1" stop-color="#ffffff" stop-opacity="1"/>
+        </linearGradient>
+      </defs>
+      <g fill="none" stroke="url(#hs-stream)" stroke-width="3.2" stroke-linecap="round">
+        <line x1="6.5" y1="13" x2="22" y2="13"/>
+        <line x1="6.5" y1="20" x2="28" y2="20"/>
+        <line x1="6.5" y1="27" x2="22" y2="27"/>
+      </g>
+      <g fill="#ffffff">
+        <circle cx="27.5" cy="13" r="3"/>
+        <circle cx="33.5" cy="20" r="3"/>
+        <circle cx="27.5" cy="27" r="3"/>
+      </g>
+    </svg>
+  </div>
   <div>
-    <h1>Hedera Mainnet · Live</h1>
+    <h1>Hash<span class="accent">Stream</span></h1>
     <p><span class="dot" id="dot"></span><span id="status">connecting…</span></p>
   </div>
 </div>
@@ -522,7 +545,7 @@ async function run(){
   try{
     await poll();
     $('dot').classList.remove('err');
-    $('status').textContent=(STRESS?'stress test +'+fmtInt(STRESS)+' synthetic tx/s · ':'live · ')+new Date().toLocaleTimeString();
+    $('status').textContent=STRESS?('Hedera mainnet · stress +'+fmtInt(STRESS)+'/s'):'Hedera mainnet · live';
   }catch(e){
     $('dot').classList.add('err');
     $('status').textContent='retrying… ('+e.message+')';
