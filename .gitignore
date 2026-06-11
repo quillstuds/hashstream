@@ -1,0 +1,6 @@
+# Local preview / tooling
+.claude/
+snapshot.json
+
+# OS noise
+.DS_Store
