@@ -241,7 +241,8 @@ function streakSprite(color){
   const lin=g.createLinearGradient(0,0,W,0);
   lin.addColorStop(0,hexToRgba(color,0));
   lin.addColorStop(0.7,hexToRgba(color,0.45));
-  lin.addColorStop(1,hexToRgba(color,1));
+  lin.addColorStop(0.92,hexToRgba(color,1));
+  lin.addColorStop(1,hexToRgba(color,0));
   g.fillStyle=lin;g.fillRect(0,0,W,H);
   g.globalCompositeOperation='destination-in';
   const vert=g.createLinearGradient(0,0,0,H);
