@@ -567,8 +567,8 @@ function frame(t){
       const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
       const spr=sprite(p.c);
       if(showTail){
-        const tl=p.r*9,th=p.r*2;
-        ctx.globalAlpha=a*0.85;
+        const tl=18+p.r*3,th=p.r*2;
+        ctx.globalAlpha=a*Math.min(0.97,0.8+p.r*0.028);
         ctx.drawImage(streakSprite(p.c),(p.x-tl)|0,(p.y-th/2)|0,tl,th);
       }
       ctx.globalAlpha=a;
