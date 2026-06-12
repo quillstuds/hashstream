@@ -556,12 +556,12 @@ function frame(t){
       const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
       const spr=sprite(p.c);
       if(showTail){
-        const L=24+p.r*4,R=p.r;
+        const L=36+p.r*6,R=p.r;
         const grad=ctx.createLinearGradient(p.x-L,0,p.x+R,0);
         grad.addColorStop(0,hexToRgba(p.c,0));
-        grad.addColorStop(0.7,hexToRgba(p.c,0.5));
+        grad.addColorStop(0.78,hexToRgba(p.c,0.32));
         grad.addColorStop(1,hexToRgba(p.c,1));
-        ctx.globalAlpha=a*Math.min(0.97,0.8+p.r*0.028);
+        ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03);
         ctx.fillStyle=grad;
         ctx.beginPath();
         ctx.moveTo(p.x-L,p.y);
