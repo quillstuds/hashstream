@@ -492,8 +492,18 @@ function frame(t){
     const n=particles.length;
     const lod=n>2200?0:n>700?1:2;
 
-    let best=null,bd=1e9;
-    if(mouse.x>=0){
+    // Once a dot is focused, stay locked on it — don't let other dots passing
+    // under the cursor (or the same touch point) steal focus. Release only when
+    // the pointer moves off that specific dot.
+    if(hoverP){
+      const dx=hoverP.x-mouse.x,dy=hoverP.y-mouse.y;
+      const lim=Math.max(hoverP.r*2.5,lastPointerType==='mouse'?14:24);
+      const stillOver=mouse.x>=0&&dx*dx+dy*dy<lim*lim;
+      if(stillOver||tipHover)tipHideT=t;
+      else if(t-tipHideT>250){hoverP=null;$('tip').style.display='none';}
+    }
+    if(!hoverP&&mouse.x>=0){
+      let best=null,bd=1e9;
       for(let i=0;i<n;i++){
         const p=particles[i];
         if(!p.tx)continue;
@@ -501,12 +511,9 @@ function frame(t){
         const d=dx*dx+dy*dy,lim=Math.max(p.r*2.5,lastPointerType==='mouse'?14:24);
         if(d<lim*lim&&d<bd){bd=d;best=p;}
       }
+      if(best){hoverP=best;showTip(best);tipHideT=t;}
     }
-    if(best){hoverP=best;showTip(best);cv.style.cursor='pointer';tipHideT=t;}
-    else{
-      if(hoverP&&!tipHover&&t-tipHideT>250){hoverP=null;$('tip').style.display='none';}
-      if(!hoverP)cv.style.cursor='default';
-    }
+    cv.style.cursor=hoverP?'pointer':'default';
 
     ctx.clearRect(0,0,W,H);
     for(let i=0;i<lanes.length;i++){
