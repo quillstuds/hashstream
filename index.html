@@ -442,8 +442,8 @@ function showTip(p){
   tip.style.left=x+'px';tip.style.top=y+'px';
 }
 
-let lastPointerType='mouse',tapPending=false;
-cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;}});
+let lastPointerType='mouse',tapPending=false,mouseMoved=false;
+cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;mouseMoved=true;}});
 cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){mouse.x=mouse.y=-99;}});
 cv.addEventListener('pointerdown',e=>{lastPointerType=e.pointerType;if(e.pointerType!=='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;tapPending=true;hoverP=null;$('tip').style.display='none';}});
 cv.addEventListener('click',()=>{if(lastPointerType==='mouse'&&hoverP&&hoverP.tx)window.open('https://hashscan.io/mainnet/transaction/'+hoverP.tx.transaction_id,'_blank');});
@@ -502,9 +502,10 @@ function frame(t){
       if(stillOver||tipHover)tipHideT=t;
       else if(t-tipHideT>250){hoverP=null;$('tip').style.display='none';}
     }
-    // Mouse hovers continuously; touch only checks at the moment of a tap, so a
-    // stale touch point never grabs a dot that later drifts through it.
-    if(!hoverP&&mouse.x>=0&&(lastPointerType==='mouse'||tapPending)){
+    // Acquire a new dot only on deliberate pointer interaction: while the mouse
+    // is actively moving, or on the frame a tap fires. A parked cursor or stale
+    // touch point never grabs a dot that later drifts through it.
+    if(!hoverP&&mouse.x>=0&&((lastPointerType==='mouse'&&mouseMoved)||tapPending)){
       let best=null,bd=1e9;
       for(let i=0;i<n;i++){
         const p=particles[i];
@@ -515,7 +516,7 @@ function frame(t){
       }
       if(best){hoverP=best;showTip(best);tipHideT=t;}
     }
-    tapPending=false;
+    mouseMoved=false;tapPending=false;
     cv.style.cursor=hoverP?'pointer':'default';
 
     ctx.clearRect(0,0,W,H);
