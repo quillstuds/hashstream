@@ -226,8 +226,10 @@ function sprite(color){
   const s=document.createElement('canvas');s.width=s.height=64;
   const g=s.getContext('2d');
   const grad=g.createRadialGradient(32,32,0,32,32,30);
-  grad.addColorStop(0,mixWhite(color,0.6));
-  grad.addColorStop(0.35,color);
+  grad.addColorStop(0,mixWhite(color,0.45));
+  grad.addColorStop(0.55,color);
+  grad.addColorStop(0.62,color);
+  grad.addColorStop(0.74,hexToRgba(color,0.4));
   grad.addColorStop(1,hexToRgba(color,0));
   g.fillStyle=grad;g.fillRect(0,0,64,64);
   return sprites[color]=s;
