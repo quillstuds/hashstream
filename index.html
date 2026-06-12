@@ -473,10 +473,12 @@ function frame(t){
   const dt=Math.min((t-lastT)/1000,0.1);lastT=t;
   if(dt>0)fpsEma+=((1/dt)-fpsEma)*0.05;
   window.__fps=Math.round(fpsEma);
-  if(!paused&&W>0){
+  if(W>0){
+    const sim=!paused;
+    const startX=LABEL_W-(isMobile?6:40),endX=W-(isMobile?8:12);
+    if(sim){
     displayTps+=((targetTps+STRESS)-displayTps)*Math.min(1,dt*2.5);
     $('s-tps').textContent=fmtNum(displayTps);
-    const startX=LABEL_W-(isMobile?6:40),endX=W-(isMobile?8:12);
     const transit=transitSecs();
 
     if(STRESS&&lanes.length){
@@ -501,6 +503,7 @@ function frame(t){
         c:failed?'#f87171':(lanes[li]?lanes[li].color:'#9ca3af'),
         r:feeRadius(q.fee),fee:q.fee,tx:q.tx});
       if(particles.length>MAX_CONCURRENT+800)particles.shift();
+    }
     }
 
     const n=particles.length;
@@ -547,13 +550,15 @@ function frame(t){
     ctx.globalCompositeOperation='lighter';
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i];
-      if(p!==hoverP)p.x+=p.sp*dt;
-      if(p.x>=endX){
-        arrivals++;
-        if(arrivals%ringEvery===0&&rings.length<170)rings.push({x:endX,y:p.y,r:Math.max(p.r,3),a:0.95,c:p.c});
-        txWatched++;feesWatched+=p.fee/1e8*usdPerHbar;
-        if(p===hoverP){hoverP=null;$('tip').style.display='none';}
-        particles.splice(i,1);continue;
+      if(sim){
+        if(p!==hoverP)p.x+=p.sp*dt;
+        if(p.x>=endX){
+          arrivals++;
+          if(arrivals%ringEvery===0&&rings.length<170)rings.push({x:endX,y:p.y,r:Math.max(p.r,3),a:0.95,c:p.c});
+          txWatched++;feesWatched+=p.fee/1e8*usdPerHbar;
+          if(p===hoverP){hoverP=null;$('tip').style.display='none';}
+          particles.splice(i,1);continue;
+        }
       }
       const a=Math.min(1,(p.x-startX)/60);
       const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
@@ -572,14 +577,14 @@ function frame(t){
     }
     ctx.globalAlpha=1;
     for(let i=rings.length-1;i>=0;i--){
-      const g=rings[i];g.r+=72*dt;g.a-=1.9*dt;
-      if(g.a<=0){rings.splice(i,1);continue;}
+      const g=rings[i];
+      if(sim){g.r+=72*dt;g.a-=1.9*dt;if(g.a<=0){rings.splice(i,1);continue;}}
       ctx.globalAlpha=Math.min(1,g.a);ctx.strokeStyle=g.c;ctx.lineWidth=2;
       ctx.beginPath();ctx.arc(g.x,g.y,g.r,0,7);ctx.stroke();
     }
     ctx.globalAlpha=1;
     ctx.globalCompositeOperation='source-over';
-    $('s-watch').textContent=fmtInt(txWatched)+' tx · $'+feesWatched.toFixed(4);
+    if(sim)$('s-watch').textContent=fmtInt(txWatched)+' tx · $'+feesWatched.toFixed(4);
   }
   requestAnimationFrame(frame);
 }
