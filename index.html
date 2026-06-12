@@ -411,7 +411,7 @@ async function poll(){
   firstPoll=false;
 }
 
-const feeRadius=f=>Math.min(6,Math.max(1.5,1.5+1.6*Math.log10(Math.max(f,1)/1e5)));
+const feeRadius=f=>Math.min(5,Math.max(1.5,1.5+1.6*Math.log10(Math.max(f,1)/1e5)));
 
 function showTip(p){
   const t=p.tx,tip=$('tip');
@@ -546,7 +546,7 @@ function frame(t){
       const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
       const spr=sprite(p.c);
       if(showTail){
-        const L=18+p.r*3,R=p.r;
+        const L=24+p.r*4,R=p.r;
         const grad=ctx.createLinearGradient(p.x-L,0,p.x+R,0);
         grad.addColorStop(0,hexToRgba(p.c,0));
         grad.addColorStop(0.7,hexToRgba(p.c,0.5));
