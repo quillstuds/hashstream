@@ -210,14 +210,47 @@ const compact=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=
 function memoTxt(b64){try{const s=atob(b64||'');return /^[\x20-\x7E]{3,}$/.test(s)?s.slice(0,80):'';}catch(e){return''}}
 
 const sprites={};
+function hexToRgba(hex,a){
+  const h=hex.replace('#','');
+  const r=parseInt(h.slice(0,2),16),gg=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  return 'rgba('+r+','+gg+','+b+','+a+')';
+}
+function mixWhite(hex,t){
+  const h=hex.replace('#','');
+  let r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  r=Math.round(r+(255-r)*t);g=Math.round(g+(255-g)*t);b=Math.round(b+(255-b)*t);
+  return 'rgb('+r+','+g+','+b+')';
+}
 function sprite(color){
   if(sprites[color])return sprites[color];
   const s=document.createElement('canvas');s.width=s.height=64;
   const g=s.getContext('2d');
-  const grad=g.createRadialGradient(32,32,2,32,32,30);
-  grad.addColorStop(0,'#ffffff');grad.addColorStop(0.18,color);grad.addColorStop(1,'rgba(0,0,0,0)');
+  const grad=g.createRadialGradient(32,32,0,32,32,30);
+  grad.addColorStop(0,mixWhite(color,0.6));
+  grad.addColorStop(0.35,color);
+  grad.addColorStop(1,hexToRgba(color,0));
   g.fillStyle=grad;g.fillRect(0,0,64,64);
   return sprites[color]=s;
+}
+// Aceternity-style meteor streak: thin straight line, color at head end fading to transparent at the tail tip
+const streaks={};
+function streakSprite(color){
+  if(streaks[color])return streaks[color];
+  const W=256,H=16,s=document.createElement('canvas');s.width=W;s.height=H;
+  const g=s.getContext('2d');
+  const lin=g.createLinearGradient(0,0,W,0);
+  lin.addColorStop(0,hexToRgba(color,0));
+  lin.addColorStop(0.7,hexToRgba(color,0.45));
+  lin.addColorStop(1,hexToRgba(color,1));
+  g.fillStyle=lin;g.fillRect(0,0,W,H);
+  g.globalCompositeOperation='destination-in';
+  const vert=g.createLinearGradient(0,0,0,H);
+  vert.addColorStop(0,'rgba(0,0,0,0)');
+  vert.addColorStop(0.22,'rgba(0,0,0,1)');
+  vert.addColorStop(0.78,'rgba(0,0,0,1)');
+  vert.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=vert;g.fillRect(0,0,W,H);
+  return streaks[color]=s;
 }
 
 const SHORT={CONSENSUSSUBMITMESSAGE:'HCS messages',CONTRACTCALL:'Contract call',ETHEREUMTRANSACTION:'Ethereum tx',CRYPTOCREATEACCOUNT:'Account create',CRYPTOAPPROVEALLOWANCE:'Approve',TOKENASSOCIATE:'Token assoc.',OTHER:'Other'};
@@ -396,7 +429,7 @@ async function poll(){
   firstPoll=false;
 }
 
-const feeRadius=f=>Math.min(8,Math.max(2.2,2.2+1.15*Math.log10(Math.max(f,1)/1e4)));
+const feeRadius=f=>Math.min(6,Math.max(1.5,1.5+1.6*Math.log10(Math.max(f,1)/1e5)));
 
 function showTip(p){
   const t=p.tx,tip=$('tip');
@@ -510,6 +543,7 @@ function frame(t){
     }
 
     const ringEvery=n>700?Math.ceil(n/350):1;
+    const showTail=lod!==0;
     ctx.globalCompositeOperation='lighter';
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i];
@@ -522,15 +556,14 @@ function frame(t){
         particles.splice(i,1);continue;
       }
       const a=Math.min(1,(p.x-startX)/60);
-      const sz=p.r*4.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
+      const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
       const spr=sprite(p.c);
-      if(lod===2){
-        ctx.globalAlpha=a*0.22;ctx.drawImage(spr,hx-p.sp*0.08,hy,sz,sz);
-        ctx.globalAlpha=a*0.5;ctx.drawImage(spr,hx-p.sp*0.04,hy,sz,sz);
-      }else if(lod===1){
-        ctx.globalAlpha=a*0.4;ctx.drawImage(spr,hx-p.sp*0.05,hy,sz,sz);
+      if(showTail){
+        const tl=p.r*9,th=p.r*2;
+        ctx.globalAlpha=a*0.85;
+        ctx.drawImage(streakSprite(p.c),(p.x-tl)|0,(p.y-th/2)|0,tl,th);
       }
-      ctx.globalAlpha=a*(lod===0?0.55:1);
+      ctx.globalAlpha=a;
       ctx.drawImage(spr,hx,hy,sz,sz);
       if(p===hoverP){
         ctx.globalAlpha=0.9;ctx.strokeStyle='#fff';ctx.lineWidth=1.4;
