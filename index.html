@@ -689,15 +689,21 @@ $('pauseBtn').addEventListener('click',()=>{
 });
 const IC_AMBIENT='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="7" cy="6" r="2"/><circle cx="15.5" cy="9" r="2"/><circle cx="9.5" cy="14" r="2"/><circle cx="17" cy="17.5" r="1.6"/><circle cx="5" cy="18" r="1.4"/></svg>';
 const IC_LANES='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16 M4 12h16 M4 17h16"/></svg>';
-$('ambientBtn').addEventListener('click',()=>{
-  ambient=!ambient;
+function applyMode(){
   document.body.classList.toggle('ambient',ambient);
-  particles=[];embers=[];hoverP=null;$('tip').style.display='none';
   $('ambientBtn').querySelector('.bic').innerHTML=ambient?IC_LANES:IC_AMBIENT;
   $('ambientBtn').querySelector('.blab').textContent=ambient?'Info':'Ambient';
   $('ambientBtn').setAttribute('aria-label',ambient?'Info view':'Ambient mode');
-  buildLegend();layout();
+}
+$('ambientBtn').addEventListener('click',()=>{
+  ambient=!ambient;
+  try{localStorage.setItem('hs-mode',ambient?'ambient':'lanes');}catch(e){}
+  particles=[];embers=[];hoverP=null;$('tip').style.display='none';
+  applyMode();buildLegend();layout();
 });
+// restore the mode the user last chose
+try{if(localStorage.getItem('hs-mode')==='ambient')ambient=true;}catch(e){}
+applyMode();
 $('fsBtn').addEventListener('click',()=>{
   if(document.fullscreenElement)document.exitFullscreen();
   else document.documentElement.requestFullscreen();
