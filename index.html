@@ -72,6 +72,16 @@ body{
 #spark{display:block;width:100%;height:34px}
 .caption{position:fixed;bottom:2px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--faint);z-index:4;padding:2px 10px;white-space:nowrap}
 
+.ambient-tps{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:4;pointer-events:none;text-align:center}
+.ambient-tps .v{font-family:'Space Grotesk';font-weight:600;font-size:clamp(72px,17vw,220px);line-height:0.9;color:#e7dcff;text-shadow:0 0 70px rgba(167,139,250,0.55)}
+.ambient-tps .l{font-size:clamp(11px,1.4vw,15px);letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-top:12px}
+.legend{display:none;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);flex-wrap:wrap;gap:9px 16px;justify-content:center;max-width:calc(100vw - 28px);padding:11px 17px}
+.lgi{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap}
+.lgi .lsw{width:10px;height:10px;border-radius:3px}
+body.ambient .tps,body.ambient .statbar,body.ambient .caption{display:none}
+body.ambient .ambient-tps{display:flex}
+body.ambient .legend{display:flex}
+
 #tip{position:fixed;z-index:20;width:300px;max-width:calc(100vw - 24px);padding:14px 16px;border-radius:14px;display:none;background:rgba(13,13,24,0.92);border:1px solid rgba(255,255,255,0.13);backdrop-filter:blur(16px);box-shadow:0 14px 44px rgba(0,0,0,0.55)}
 #tip .th{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
 #tip .ty{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
@@ -155,6 +165,7 @@ body{
 </div>
 
 <div class="hud controls">
+  <button class="btn" id="ambientBtn" aria-label="Ambient mode"><span class="bic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="7" cy="6" r="2"/><circle cx="15.5" cy="9" r="2"/><circle cx="9.5" cy="14" r="2"/><circle cx="17" cy="17.5" r="1.6"/><circle cx="5" cy="18" r="1.4"/></svg></span><span class="blab">Ambient</span></button>
   <button class="btn" id="pauseBtn" aria-label="Pause"><span class="bic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.4"/><rect x="13.5" y="5" width="4" height="14" rx="1.4"/></svg></span><span class="blab">Pause</span></button>
   <button class="btn" id="fsBtn" aria-label="Toggle fullscreen"><span class="bic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4 M15 4h4a1 1 0 0 1 1 1v4 M20 15v4a1 1 0 0 1-1 1h-4 M9 20H5a1 1 0 0 1-1-1v-4"/></svg></span><span class="blab">Fullscreen</span></button>
 </div>
@@ -172,6 +183,12 @@ body{
     <canvas id="spark"></canvas>
   </div>
 </div>
+
+<div class="hud ambient-tps" id="ambientTps">
+  <div class="v num" id="amb-tps">—</div>
+  <div class="l">transactions / sec</div>
+</div>
+<div class="hud legend glass" id="legend"></div>
 
 <p class="caption" id="caption">every transaction is displayed · size = fee · tap or hover a dot to inspect</p>
 
@@ -248,7 +265,7 @@ let lanes=[],laneIdx={};
 let displayTps=0,targetTps=0,usdPerHbar=0,sparkPts=[];
 let particles=[],embers=[],spawnQueue=[],lastSeenTs=0,lastBlockNum=0,histSamples=[];
 const EMBER_CAP=1400;
-let txWatched=0,feesWatched=0,paused=false,arrivals=0;
+let txWatched=0,feesWatched=0,paused=false,arrivals=0,ambient=false;
 let mouse={x:-99,y:-99},hoverP=null,tipHover=false,tipHideT=0;
 window.__fps=0;
 
@@ -267,6 +284,7 @@ function layout(){
   sp.width=Math.round(r.width*dpr);sp.height=Math.round(34*dpr);
   sp.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
   drawSpark();
+  if(lanes.length)buildLegend();
 }
 window.addEventListener('resize',layout);
 
@@ -286,6 +304,28 @@ function drawSpark(){
 async function getJSON(p){const r=await fetch(API+p);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}
 
 function transitSecs(){return Math.max(1.2,Math.min(7,MAX_CONCURRENT/Math.max(targetTps+STRESS,1)));}
+
+// Spawn one dot. Lane mode: enters left, flows right within its lane. Ambient
+// mode: enters top at a random x, falls straight down, all types mixed.
+function pushParticle(li,color,r,fee,tx){
+  const transit=transitSecs(),jit=0.85+Math.random()*0.3;
+  if(ambient){
+    particles.push({x:24+Math.random()*(W-48),y:-30,vx:0,vy:(H+60)/(transit*jit),c:color,r,fee,tx});
+  }else{
+    const startX=LABEL_W-(isMobile?6:40),endX=W-(isMobile?8:12);
+    particles.push({x:startX,y:laneY(li)+(Math.random()*2-1)*laneH*0.36,vx:(endX-startX)/(transit*jit),vy:0,c:color,r,fee,tx});
+  }
+  if(particles.length>MAX_CONCURRENT+800)particles.shift();
+}
+
+function buildLegend(){
+  const el=$('legend');el.innerHTML='';
+  for(const l of lanes){
+    const item=document.createElement('div');item.className='lgi';
+    item.innerHTML='<span class="lsw" style="background:'+l.color+';box-shadow:0 0 8px '+l.color+'"></span>'+laneName(l);
+    el.appendChild(item);
+  }
+}
 
 async function initLanes(){
   $('status').textContent='measuring 3h traffic mix…';
@@ -462,7 +502,7 @@ function frame(t){
     if(sim){
     displayTps+=((targetTps+STRESS)-displayTps)*Math.min(1,dt*2.5);
     $('s-tps').textContent=fmtNum(displayTps);
-    const transit=transitSecs();
+    $('amb-tps').textContent=fmtNum(displayTps);
 
     if(STRESS&&lanes.length){
       stressAcc+=STRESS*dt;
@@ -470,10 +510,7 @@ function frame(t){
         stressAcc--;
         const l=lanes[Math.random()*lanes.length|0];
         const fee=(l.fees&&l.fees[Math.random()*l.fees.length|0])||100000;
-        particles.push({x:startX,y:laneY(l.i)+(Math.random()*2-1)*laneH*0.36,
-          sp:(endX-startX)/(transit*(0.85+Math.random()*0.3)),
-          c:l.color,r:feeRadius(fee),fee,tx:null});
-        if(particles.length>MAX_CONCURRENT+800)particles.shift();
+        pushParticle(l.i,l.color,feeRadius(fee),fee,null);
       }
     }
 
@@ -481,11 +518,7 @@ function frame(t){
       const q=spawnQueue.shift();
       const li=q.li<lanes.length?q.li:(laneIdx[q.name]??lanes.length-1);
       const failed=q.tx&&q.tx.result!=='SUCCESS';
-      particles.push({x:startX,y:laneY(li)+(Math.random()*2-1)*laneH*0.36,
-        sp:(endX-startX)/(transit*(0.85+Math.random()*0.3)),
-        c:failed?'#f87171':(lanes[li]?lanes[li].color:'#9ca3af'),
-        r:feeRadius(q.fee),fee:q.fee,tx:q.tx});
-      if(particles.length>MAX_CONCURRENT+800)particles.shift();
+      pushParticle(li,failed?'#f87171':(lanes[li]?lanes[li].color:'#9ca3af'),feeRadius(q.fee),q.fee,q.tx);
     }
     }
 
@@ -520,23 +553,25 @@ function frame(t){
     cv.style.cursor=hoverP?'pointer':'default';
 
     ctx.clearRect(0,0,W,H);
-    for(let i=0;i<lanes.length;i++){
-      if(i%2)ctx.fillStyle='rgba(255,255,255,0.014)',ctx.fillRect(0,TOP+i*laneH,W,laneH);
-      ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(0,TOP+i*laneH);ctx.lineTo(W,TOP+i*laneH);ctx.stroke();
-    }
-    ctx.strokeStyle='rgba(255,255,255,0.05)';
-    ctx.beginPath();ctx.moveTo(0,TOP+lanes.length*laneH);ctx.lineTo(W,TOP+lanes.length*laneH);ctx.stroke();
-    const lblX=isMobile?13:22;
-    for(const l of lanes){
-      const ty=laneY(l.i);
-      const lr=l.rate+(STRESS?STRESS/lanes.length:0);
-      ctx.fillStyle='rgba(238,240,246,0.9)';ctx.font=isMobile?'500 12px Inter':'500 13px Inter';
-      ctx.fillText(laneName(l),lblX,ty-(isMobile?8:9));
-      ctx.fillStyle='rgba(139,144,165,0.85)';ctx.font=isMobile?'10px "Space Grotesk"':'11.5px "Space Grotesk"';
-      const stats=isMobile?(fmtNum(lr)+'/s · '+l.share.toFixed(0)+'% · '+fmtUsd(l.usdHr)+'/hr')
-                          :(fmtNum(lr)+' tx/s · '+l.share.toFixed(1)+'% · '+fmtUsd(l.usdHr)+'/hr');
-      ctx.fillText(stats,lblX,ty+(isMobile?8:9));
+    if(!ambient){
+      for(let i=0;i<lanes.length;i++){
+        if(i%2)ctx.fillStyle='rgba(255,255,255,0.014)',ctx.fillRect(0,TOP+i*laneH,W,laneH);
+        ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(0,TOP+i*laneH);ctx.lineTo(W,TOP+i*laneH);ctx.stroke();
+      }
+      ctx.strokeStyle='rgba(255,255,255,0.05)';
+      ctx.beginPath();ctx.moveTo(0,TOP+lanes.length*laneH);ctx.lineTo(W,TOP+lanes.length*laneH);ctx.stroke();
+      const lblX=isMobile?13:22;
+      for(const l of lanes){
+        const ty=laneY(l.i);
+        const lr=l.rate+(STRESS?STRESS/lanes.length:0);
+        ctx.fillStyle='rgba(238,240,246,0.9)';ctx.font=isMobile?'500 12px Inter':'500 13px Inter';
+        ctx.fillText(laneName(l),lblX,ty-(isMobile?8:9));
+        ctx.fillStyle='rgba(139,144,165,0.85)';ctx.font=isMobile?'10px "Space Grotesk"':'11.5px "Space Grotesk"';
+        const stats=isMobile?(fmtNum(lr)+'/s · '+l.share.toFixed(0)+'% · '+fmtUsd(l.usdHr)+'/hr')
+                            :(fmtNum(lr)+' tx/s · '+l.share.toFixed(1)+'% · '+fmtUsd(l.usdHr)+'/hr');
+        ctx.fillText(stats,lblX,ty+(isMobile?8:9));
+      }
     }
 
     const burstEvery=n>700?Math.ceil(n/350):1;
@@ -545,10 +580,10 @@ function frame(t){
     for(let i=particles.length-1;i>=0;i--){
       const p=particles[i];
       if(sim){
-        if(p!==hoverP)p.x+=p.sp*dt;
-        if(p.x>=endX){
+        if(p!==hoverP){p.x+=p.vx*dt;p.y+=p.vy*dt;}
+        if(ambient?p.y>=H+30:p.x>=endX){
           arrivals++;
-          if(arrivals%burstEvery===0&&embers.length<EMBER_CAP){
+          if(!ambient&&arrivals%burstEvery===0&&embers.length<EMBER_CAP){
             const k=2+Math.round(p.r*0.9);
             for(let j=0;j<k;j++){
               const ang=Math.random()*6.283,spd=24+Math.random()*70*(0.6+p.r/5);
@@ -563,22 +598,36 @@ function frame(t){
           particles.splice(i,1);continue;
         }
       }
-      const a=Math.min(1,(p.x-startX)/60)*Math.min(1,(endX-p.x)/160);
+      const a=ambient?Math.min(1,(p.y+20)/60)*Math.min(1,(H-p.y)/160)
+                     :Math.min(1,(p.x-startX)/60)*Math.min(1,(endX-p.x)/160);
       const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
       const spr=sprite(p.c);
       if(showTail){
         const L=36+p.r*6,R=p.r;
-        const grad=ctx.createLinearGradient(p.x-L,0,p.x+R,0);
-        grad.addColorStop(0,hexToRgba(p.c,0));
-        grad.addColorStop(0.78,hexToRgba(p.c,0.32));
-        grad.addColorStop(1,hexToRgba(p.c,1));
         ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03)*(isMobile?0.55:1);
-        ctx.fillStyle=grad;
         ctx.beginPath();
-        ctx.moveTo(p.x-L,p.y);
-        ctx.quadraticCurveTo(p.x-L*0.35,p.y-R,p.x,p.y-R);
-        ctx.arc(p.x,p.y,R,-Math.PI/2,Math.PI/2);
-        ctx.quadraticCurveTo(p.x-L*0.35,p.y+R,p.x-L,p.y);
+        if(ambient){
+          // falling dot: round head at the bottom, tail tapering up
+          const grad=ctx.createLinearGradient(0,p.y-L,0,p.y+R);
+          grad.addColorStop(0,hexToRgba(p.c,0));
+          grad.addColorStop(0.78,hexToRgba(p.c,0.32));
+          grad.addColorStop(1,hexToRgba(p.c,1));
+          ctx.fillStyle=grad;
+          ctx.moveTo(p.x,p.y-L);
+          ctx.quadraticCurveTo(p.x+R,p.y-L*0.35,p.x+R,p.y);
+          ctx.arc(p.x,p.y,R,0,Math.PI);
+          ctx.quadraticCurveTo(p.x-R,p.y-L*0.35,p.x,p.y-L);
+        }else{
+          const grad=ctx.createLinearGradient(p.x-L,0,p.x+R,0);
+          grad.addColorStop(0,hexToRgba(p.c,0));
+          grad.addColorStop(0.78,hexToRgba(p.c,0.32));
+          grad.addColorStop(1,hexToRgba(p.c,1));
+          ctx.fillStyle=grad;
+          ctx.moveTo(p.x-L,p.y);
+          ctx.quadraticCurveTo(p.x-L*0.35,p.y-R,p.x,p.y-R);
+          ctx.arc(p.x,p.y,R,-Math.PI/2,Math.PI/2);
+          ctx.quadraticCurveTo(p.x-L*0.35,p.y+R,p.x-L,p.y);
+        }
         ctx.closePath();
         ctx.fill();
       }
@@ -626,6 +675,17 @@ $('pauseBtn').addEventListener('click',()=>{
   $('pauseBtn').querySelector('.bic').innerHTML=paused?IC_PLAY:IC_PAUSE;
   $('pauseBtn').querySelector('.blab').textContent=paused?'Resume':'Pause';
   $('pauseBtn').setAttribute('aria-label',paused?'Resume':'Pause');
+});
+const IC_AMBIENT='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="7" cy="6" r="2"/><circle cx="15.5" cy="9" r="2"/><circle cx="9.5" cy="14" r="2"/><circle cx="17" cy="17.5" r="1.6"/><circle cx="5" cy="18" r="1.4"/></svg>';
+const IC_LANES='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16 M4 12h16 M4 17h16"/></svg>';
+$('ambientBtn').addEventListener('click',()=>{
+  ambient=!ambient;
+  document.body.classList.toggle('ambient',ambient);
+  particles=[];embers=[];hoverP=null;$('tip').style.display='none';
+  $('ambientBtn').querySelector('.bic').innerHTML=ambient?IC_LANES:IC_AMBIENT;
+  $('ambientBtn').querySelector('.blab').textContent=ambient?'Lanes':'Ambient';
+  $('ambientBtn').setAttribute('aria-label',ambient?'Lane view':'Ambient mode');
+  buildLegend();layout();
 });
 $('fsBtn').addEventListener('click',()=>{
   if(document.fullscreenElement)document.exitFullscreen();
