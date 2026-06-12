@@ -561,7 +561,7 @@ function frame(t){
         grad.addColorStop(0,hexToRgba(p.c,0));
         grad.addColorStop(0.78,hexToRgba(p.c,0.32));
         grad.addColorStop(1,hexToRgba(p.c,1));
-        ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03);
+        ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03)*(isMobile?0.55:1);
         ctx.fillStyle=grad;
         ctx.beginPath();
         ctx.moveTo(p.x-L,p.y);
