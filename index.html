@@ -72,12 +72,15 @@ body{
 #spark{display:block;width:100%;height:34px}
 .caption{position:fixed;bottom:2px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--faint);z-index:4;padding:2px 10px;white-space:nowrap}
 
-.ambient-tps{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:4;pointer-events:none;text-align:center}
-.ambient-tps .v{font-family:'Space Grotesk';font-weight:600;font-size:clamp(72px,17vw,220px);line-height:0.9;color:#e7dcff;text-shadow:0 0 70px rgba(167,139,250,0.55)}
-.ambient-tps .l{font-size:clamp(11px,1.4vw,15px);letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-top:12px}
-.legend{display:none;bottom:max(16px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);flex-wrap:wrap;gap:9px 16px;justify-content:center;max-width:calc(100vw - 28px);padding:11px 17px}
-.lgi{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap}
-.lgi .lsw{width:10px;height:10px;border-radius:3px}
+.ambient-tps{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:4;text-align:center}
+.ambient-tps,.ambient-tps *{pointer-events:none}
+.amb-card{display:flex;flex-direction:column;align-items:center;padding:16px 54px 22px;border-radius:30px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ambient-tps .v{font-family:'Space Grotesk';font-weight:600;font-size:clamp(64px,15vw,190px);line-height:0.9;color:#e7dcff;text-shadow:0 0 60px rgba(167,139,250,0.5)}
+.ambient-tps .l{font-size:clamp(10px,1.3vw,14px);letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-top:10px}
+.legend{display:none;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));flex-wrap:nowrap;gap:6px;justify-content:space-evenly;align-items:center;padding:9px 14px;border-radius:13px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.legend,.legend *{pointer-events:none}
+.lgi{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.lgi .lsw{width:9px;height:9px;border-radius:3px;flex:none}
 body.ambient .tps,body.ambient .statbar,body.ambient .caption{display:none}
 body.ambient .ambient-tps{display:flex}
 body.ambient .legend{display:flex}
@@ -125,6 +128,9 @@ body.ambient .legend{display:flex}
   .chip b{font-size:13px}
   #sparkbox{display:none}
   .caption{display:none}
+  .legend{flex-wrap:wrap;justify-content:center;gap:5px 13px;padding:9px 12px}
+  .lgi{font-size:10.5px}
+  .ambient-tps .v{font-size:clamp(56px,20vw,150px)}
 }
 </style>
 </head>
@@ -185,8 +191,10 @@ body.ambient .legend{display:flex}
 </div>
 
 <div class="hud ambient-tps" id="ambientTps">
-  <div class="v num" id="amb-tps">—</div>
-  <div class="l">transactions / sec</div>
+  <div class="amb-card glass">
+    <div class="v num" id="amb-tps">—</div>
+    <div class="l">transactions / sec</div>
+  </div>
 </div>
 <div class="hud legend glass" id="legend"></div>
 
@@ -243,9 +251,9 @@ function sprite(color){
   const s=document.createElement('canvas');s.width=s.height=64;
   const g=s.getContext('2d');
   const grad=g.createRadialGradient(32,32,0,32,32,30);
-  grad.addColorStop(0,mixWhite(color,0.45));
-  grad.addColorStop(0.55,color);
-  grad.addColorStop(0.62,color);
+  grad.addColorStop(0,mixWhite(color,0.4));
+  grad.addColorStop(0.22,color);
+  grad.addColorStop(0.6,color);
   grad.addColorStop(0.74,hexToRgba(color,0.4));
   grad.addColorStop(1,hexToRgba(color,0));
   g.fillStyle=grad;g.fillRect(0,0,64,64);
@@ -552,7 +560,10 @@ function frame(t){
     mouseMoved=false;tapPending=false;
     cv.style.cursor=hoverP?'pointer':'default';
 
-    ctx.clearRect(0,0,W,H);
+    // Ambient: fade the previous frame instead of clearing, so falling dots
+    // leave lingering colored trails that build a soft background wash.
+    if(ambient){ctx.fillStyle='rgba(6,6,13,0.12)';ctx.fillRect(0,0,W,H);}
+    else ctx.clearRect(0,0,W,H);
     if(!ambient){
       for(let i=0;i<lanes.length;i++){
         if(i%2)ctx.fillStyle='rgba(255,255,255,0.014)',ctx.fillRect(0,TOP+i*laneH,W,laneH);
@@ -603,15 +614,15 @@ function frame(t){
       const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
       const spr=sprite(p.c);
       if(showTail){
-        const L=36+p.r*6,R=p.r;
-        ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03)*(isMobile?0.55:1);
+        const L=(ambient?210+p.r*30:36+p.r*6),R=p.r;
+        ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03)*(isMobile?0.55:1)*(ambient?0.48:1);
         ctx.beginPath();
         if(ambient){
           // falling dot: round head at the bottom, tail tapering up
           const grad=ctx.createLinearGradient(0,p.y-L,0,p.y+R);
           grad.addColorStop(0,hexToRgba(p.c,0));
-          grad.addColorStop(0.78,hexToRgba(p.c,0.32));
-          grad.addColorStop(1,hexToRgba(p.c,1));
+          grad.addColorStop(0.82,hexToRgba(p.c,0.14));
+          grad.addColorStop(1,hexToRgba(p.c,0.6));
           ctx.fillStyle=grad;
           ctx.moveTo(p.x,p.y-L);
           ctx.quadraticCurveTo(p.x+R,p.y-L*0.35,p.x+R,p.y);
@@ -683,8 +694,8 @@ $('ambientBtn').addEventListener('click',()=>{
   document.body.classList.toggle('ambient',ambient);
   particles=[];embers=[];hoverP=null;$('tip').style.display='none';
   $('ambientBtn').querySelector('.bic').innerHTML=ambient?IC_LANES:IC_AMBIENT;
-  $('ambientBtn').querySelector('.blab').textContent=ambient?'Lanes':'Ambient';
-  $('ambientBtn').setAttribute('aria-label',ambient?'Lane view':'Ambient mode');
+  $('ambientBtn').querySelector('.blab').textContent=ambient?'Info':'Ambient';
+  $('ambientBtn').setAttribute('aria-label',ambient?'Info view':'Ambient mode');
   buildLegend();layout();
 });
 $('fsBtn').addEventListener('click',()=>{
