@@ -276,17 +276,29 @@ function mixWhite(hex,t){
   return 'rgb('+r+','+g+','+b+')';
 }
 function sprite(color){
-  if(sprites[color])return sprites[color];
-  const s=document.createElement('canvas');s.width=s.height=64;
+  // Cache per colour AND per device: mobile gets a sharper, more opaque core
+  // with a tighter glow rim so dots don't read as blurry on hi-dpi screens.
+  const key=color+(isMobile?'m':'d');
+  if(sprites[key])return sprites[key];
+  const D=128;                       // hi-res sprite => crisp when scaled
+  const s=document.createElement('canvas');s.width=s.height=D;
   const g=s.getContext('2d');
-  const grad=g.createRadialGradient(32,32,0,32,32,30);
-  grad.addColorStop(0,mixWhite(color,0.4));
-  grad.addColorStop(0.22,color);
-  grad.addColorStop(0.6,color);
-  grad.addColorStop(0.74,hexToRgba(color,0.4));
-  grad.addColorStop(1,hexToRgba(color,0));
-  g.fillStyle=grad;g.fillRect(0,0,64,64);
-  return sprites[color]=s;
+  const grad=g.createRadialGradient(D/2,D/2,0,D/2,D/2,D*0.47);
+  if(isMobile){
+    grad.addColorStop(0,mixWhite(color,0.45));
+    grad.addColorStop(0.5,color);
+    grad.addColorStop(0.72,color);            // solid, defined core
+    grad.addColorStop(0.8,hexToRgba(color,0.45));
+    grad.addColorStop(1,hexToRgba(color,0));  // tight glow rim
+  }else{
+    grad.addColorStop(0,mixWhite(color,0.4));
+    grad.addColorStop(0.22,color);
+    grad.addColorStop(0.6,color);
+    grad.addColorStop(0.74,hexToRgba(color,0.4));
+    grad.addColorStop(1,hexToRgba(color,0));
+  }
+  g.fillStyle=grad;g.fillRect(0,0,D,D);
+  return sprites[key]=s;
 }
 
 const SHORT={CONSENSUSSUBMITMESSAGE:'HCS messages',CONTRACTCALL:'Contract call',ETHEREUMTRANSACTION:'Ethereum tx',CRYPTOCREATEACCOUNT:'Account create',CRYPTOAPPROVEALLOWANCE:'Approve',TOKENASSOCIATE:'Token assoc.',OTHER:'Other'};
