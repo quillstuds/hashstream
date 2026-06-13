@@ -4,6 +4,10 @@
       <stop offset="0" stop-color="#8b5cf6"/>
       <stop offset="1" stop-color="#6d28d9"/>
     </linearGradient>
+    <linearGradient id="stream" x1="11" y1="0" x2="54" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="1"/>
+    </linearGradient>
     <radialGradient id="glowP" cx="1010" cy="70" r="640" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#7c58ed" stop-opacity="0.22"/>
       <stop offset="1" stop-color="#7c58ed" stop-opacity="0"/>
@@ -46,7 +50,7 @@
 
   <g transform="translate(88 150) scale(2.0625)">
     <rect width="64" height="64" rx="16" fill="url(#badge)"/>
-    <g fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round">
+    <g fill="none" stroke="url(#stream)" stroke-width="5" stroke-linecap="round">
       <line x1="11" y1="21" x2="35" y2="21"/>
       <line x1="11" y1="32" x2="45" y2="32"/>
       <line x1="11" y1="43" x2="35" y2="43"/>
