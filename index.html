@@ -37,6 +37,7 @@ body{
 }
 .num{font-family:'Space Grotesk',monospace;font-variant-numeric:tabular-nums}
 #river{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;cursor:default;touch-action:manipulation}
+body.ambient #river{background:var(--bg)}
 
 .hud{position:fixed;z-index:5;pointer-events:none}
 .hud *{pointer-events:auto}
@@ -319,7 +320,7 @@ function transitSecs(){return Math.max(1.2,Math.min(7,MAX_CONCURRENT/Math.max(ta
 function pushParticle(li,color,r,fee,tx){
   const transit=transitSecs(),jit=0.85+Math.random()*0.3;
   if(ambient){
-    particles.push({x:24+Math.random()*(W-48),y:-30,vx:0,vy:(H+60)/(transit*jit),c:color,r,fee,tx});
+    particles.push({x:Math.random()*W,y:-30,vx:0,vy:(H+60)/(transit*jit),c:color,r,fee,tx});
   }else{
     const startX=LABEL_W-(isMobile?6:40),endX=W-(isMobile?8:12);
     particles.push({x:startX,y:laneY(li)+(Math.random()*2-1)*laneH*0.36,vx:(endX-startX)/(transit*jit),vy:0,c:color,r,fee,tx});
@@ -563,8 +564,7 @@ function frame(t){
 
     // Ambient: fade the previous frame instead of clearing, so falling dots
     // leave lingering colored trails that build a soft background wash.
-    if(ambient){ctx.fillStyle='rgba(6,6,13,0.12)';ctx.fillRect(0,0,W,H);}
-    else ctx.clearRect(0,0,W,H);
+    ctx.clearRect(0,0,W,H);
     if(!ambient){
       for(let i=0;i<lanes.length;i++){
         if(i%2)ctx.fillStyle='rgba(255,255,255,0.014)',ctx.fillRect(0,TOP+i*laneH,W,laneH);
@@ -615,14 +615,14 @@ function frame(t){
       const sz=p.r*3.4,hx=p.x-sz/2|0,hy=p.y-sz/2|0;
       const spr=sprite(p.c);
       if(showTail){
-        const L=(ambient?210+p.r*30:36+p.r*6),R=p.r;
-        ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03)*(isMobile?0.55:1)*(ambient?0.48:1);
+        const L=(ambient?320+p.r*42:36+p.r*6),R=p.r;
+        ctx.globalAlpha=a*Math.min(0.72,0.52+p.r*0.03)*(isMobile?0.55:1)*(ambient?0.6:1);
         ctx.beginPath();
         if(ambient){
           // falling dot: round head at the bottom, tail tapering up
           const grad=ctx.createLinearGradient(0,p.y-L,0,p.y+R);
           grad.addColorStop(0,hexToRgba(p.c,0));
-          grad.addColorStop(0.82,hexToRgba(p.c,0.14));
+          grad.addColorStop(0.72,hexToRgba(p.c,0.12));
           grad.addColorStop(1,hexToRgba(p.c,0.6));
           ctx.fillStyle=grad;
           ctx.moveTo(p.x,p.y-L);
