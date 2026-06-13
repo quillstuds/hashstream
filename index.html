@@ -609,6 +609,21 @@ function frame(t){
           if(p===hoverP){hoverP=null;$('tip').style.display='none';}
           particles.splice(i,1);continue;
         }
+        // Ambient: occasionally a fragment bursts off the falling dot — a tiny
+        // radial spray of sparks that flash bright then burn up like a meteor.
+        if(ambient&&showTail&&embers.length<EMBER_CAP){
+          const evRate=(0.42+p.r*0.132)*(isMobile?0.6:1);
+          if(Math.random()<evRate*dt){
+            const k=2+(Math.random()*3|0),bx=p.x+(Math.random()*2-1)*p.r*0.6,by=p.y-p.r*0.3;
+            for(let j=0;j<k;j++){
+              const ang=Math.random()*6.283,spd=30+Math.random()*70;
+              embers.push({x:bx,y:by,
+                vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,fall:p.vy*(0.3+Math.random()*0.18),
+                life:0.5+Math.random()*0.8,ttl:0,fd:1.1+Math.random()*1.1,
+                r:0.3+Math.random()*0.36,c:p.c,spark:true});
+            }
+          }
+        }
       }
       const a=ambient?Math.min(1,(p.y+20)/60)*Math.min(1,(H-p.y)/160)
                      :Math.min(1,(p.x-startX)/60)*Math.min(1,(endX-p.x)/160);
@@ -653,10 +668,17 @@ function frame(t){
     ctx.globalAlpha=1;
     for(let i=embers.length-1;i>=0;i--){
       const e=embers[i];
-      if(sim){e.ttl+=dt;if(e.ttl>=e.life){embers.splice(i,1);continue;}e.x+=e.vx*dt;e.y+=e.vy*dt;e.vx*=0.9;e.vy*=0.9;}
-      const lf=1-e.ttl/e.life,ssz=e.r*4.4;
-      ctx.globalAlpha=lf*lf*0.85;
-      ctx.drawImage(sprite(e.c),(e.x-ssz/2)|0,(e.y-ssz/2)|0,ssz,ssz);
+      if(sim){e.ttl+=dt;if(e.ttl>=e.life){embers.splice(i,1);continue;}e.x+=e.vx*dt;e.y+=(e.vy+(e.fall||0))*dt;e.vx*=0.9;e.vy*=0.9;}
+      const lf=1-e.ttl/e.life;
+      if(e.spark){
+        const ssz=e.r*4.4*(0.5+0.5*lf);                 // shrinks as it burns up
+        ctx.globalAlpha=Math.min(1,Math.pow(lf,e.fd)*1.2); // bright spark, ember fade
+        ctx.drawImage(sprite(e.c),(e.x-ssz/2)|0,(e.y-ssz/2)|0,ssz,ssz);
+      }else{
+        const ssz=e.r*4.4;
+        ctx.globalAlpha=lf*lf*0.85;
+        ctx.drawImage(sprite(e.c),(e.x-ssz/2)|0,(e.y-ssz/2)|0,ssz,ssz);
+      }
     }
     ctx.globalAlpha=1;
     ctx.globalCompositeOperation='source-over';
