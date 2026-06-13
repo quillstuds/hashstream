@@ -694,18 +694,19 @@ function frame(t){
         }
         ctx.closePath();
         ctx.fill();
-        // Trailing end disintegrates into a few twinkling, wandering embers
-        // so the tail looks like it's breaking up rather than just fading.
+        // Trailing end disintegrates into a few tiny twinkling grains (a fixed
+        // ~1px, drawn crisp rather than as soft glow, so they read as specks of
+        // burning rock instead of bubbles) so the tail breaks up as it fades.
         if(ambient&&lod===2){
+          ctx.fillStyle=p.c;
           for(let s=0;s<3;s++){
             const u=0.5+s*0.18+Math.sin(tt*6+ph+s*1.3)*0.045;     // creeps up the tail
             const tw=0.5+0.5*Math.sin(tt*38+ph*1.6+s*2.3);        // rapid twinkle
-            const al=a*0.55*(1-u)*tw*(isMobile?0.55:1);
+            const al=a*0.7*(1-u)*tw*(isMobile?0.55:1);
             if(al<0.02)continue;
             const jx=Math.sin(tt*5+ph+s*2)*R*1.7*u;               // lateral wander
-            const ssz=Math.max(1.3,R*(1-u*0.5))*2;
             ctx.globalAlpha=al<1?al:1;
-            ctx.drawImage(spr,(p.x+jx-ssz/2)|0,(p.y-L*u-ssz/2)|0,ssz,ssz);
+            ctx.fillRect(p.x+jx-0.6,p.y-L*u-0.6,1.2,1.2);
           }
         }
       }
