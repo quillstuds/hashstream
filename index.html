@@ -133,7 +133,19 @@ body.ambient .legend{display:flex}
   .legend{flex-wrap:wrap;justify-content:center;gap:5px 13px;padding:9px 12px}
   .lgi{font-size:10.5px}
   .ambient-tps .v{font-size:clamp(56px,20vw,150px)}
+  #offline .ocard{padding:26px 22px 22px}
 }
+#offline{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(6,6,13,0.74);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);padding:24px;text-align:center}
+#offline .ocard{max-width:390px;padding:32px 32px 26px;border-radius:20px;background:var(--panel);border:1px solid var(--panel-border);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 24px 70px rgba(0,0,0,0.55)}
+#offline .oicon{width:52px;height:52px;margin:0 auto 16px;color:var(--red);opacity:0.9}
+#offline h2{font-family:'Space Grotesk';font-weight:500;font-size:19px;letter-spacing:-0.2px}
+#offline p{font-size:13px;color:var(--muted);line-height:1.55;margin-top:10px}
+#offline .ostatus{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:20px;font-size:12px;color:var(--faint)}
+#offline .ospin{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.16);border-top-color:var(--accent);animation:ospin .8s linear infinite}
+#offline button{margin-top:18px;background:rgba(139,92,246,0.16);border:1px solid rgba(167,139,250,0.35);color:#d6c8ff;font:500 13px 'Inter';padding:9px 22px;border-radius:11px;cursor:pointer;transition:background .2s}
+#offline button:hover{background:rgba(139,92,246,0.3)}
+@keyframes ospin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -215,6 +227,20 @@ body.ambient .legend{display:flex}
   </table>
   <div class="memo" id="t-memo" style="display:none"></div>
   <a id="t-link" href="#" target="_blank" rel="noopener">View on HashScan ↗</a>
+</div>
+
+<div id="offline" role="alertdialog" aria-modal="true" aria-labelledby="offline-h" aria-describedby="offline-msg">
+  <div class="ocard">
+    <svg class="oicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 3l18 18"/>
+      <path d="M9.4 5.1A6 6 0 0 1 18.3 9.1 4 4 0 0 1 20 16.5"/>
+      <path d="M6.5 8.5A4.5 4.5 0 0 0 6.5 18H15"/>
+    </svg>
+    <h2 id="offline-h">Can't reach the mirror node</h2>
+    <p id="offline-msg">HashStream can't load live data from the Hedera mirror node right now. This is usually temporary — it will reconnect automatically.</p>
+    <div class="ostatus"><span class="ospin"></span><span id="offline-status">Reconnecting…</span></div>
+    <button id="offline-retry" type="button">Retry now</button>
+  </div>
 </div>
 
 <script>
@@ -687,16 +713,32 @@ function frame(t){
   requestAnimationFrame(frame);
 }
 
+// Show a full-screen overlay only after repeated failures, so a single
+// transient blip doesn't flash it; hide again on the next success.
+let failStreak=0,booted=false,bootTimer=null;
+const FAIL_LIMIT=2;
+function setOffline(on,msg){
+  const el=$('offline');
+  if(on){if(msg)$('offline-status').textContent=msg;el.style.display='flex';}
+  else el.style.display='none';
+}
+function noteFail(e){
+  failStreak++;
+  $('dot').classList.add('err');
+  $('status').textContent='retrying… ('+e.message+')';
+  if(failStreak>=FAIL_LIMIT)setOffline(true,'Reconnecting… ('+e.message+')');
+}
+function noteOk(){failStreak=0;$('dot').classList.remove('err');setOffline(false);}
+
 let busy=false;
 async function run(){
   if(busy)return;busy=true;
   try{
     await poll();
-    $('dot').classList.remove('err');
+    noteOk();
     $('status').textContent=STRESS?('Hedera mainnet · stress +'+fmtInt(STRESS)+'/s'):'Hedera mainnet · live';
   }catch(e){
-    $('dot').classList.add('err');
-    $('status').textContent='retrying… ('+e.message+')';
+    noteFail(e);
   }
   busy=false;
 }
@@ -737,17 +779,24 @@ document.addEventListener('fullscreenchange',()=>{
   $('fsBtn').querySelector('.blab').textContent=f?'Exit':'Fullscreen';
 });
 layout();
-(async function boot(){
+$('offline-retry').addEventListener('click',()=>{
+  $('offline-status').textContent='Reconnecting…';
+  if(bootTimer){clearTimeout(bootTimer);bootTimer=null;}
+  if(booted)run();else boot();
+});
+async function boot(){
   try{
     await initLanes();
+    booted=true;
+    noteOk();
     run();
     setInterval(run,POLL_MS);
   }catch(e){
-    $('dot').classList.add('err');
-    $('status').textContent='retrying… ('+e.message+')';
-    setTimeout(boot,4000);
+    noteFail(e);
+    bootTimer=setTimeout(boot,4000);
   }
-})();
+}
+boot();
 requestAnimationFrame(frame);
 </script>
 </body>
