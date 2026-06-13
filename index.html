@@ -612,7 +612,7 @@ function frame(t){
         // Ambient: occasionally a fragment bursts off the falling dot — a tiny
         // radial spray of sparks that flash bright then burn up like a meteor.
         if(ambient&&showTail&&embers.length<EMBER_CAP){
-          const evRate=(0.42+p.r*0.132)*(isMobile?0.6:1);
+          const evRate=(0.21+p.r*0.066)*(isMobile?0.6:1);
           if(Math.random()<evRate*dt){
             const k=2+(Math.random()*3|0),bx=p.x+(Math.random()*2-1)*p.r*0.6,by=p.y-p.r*0.3;
             for(let j=0;j<k;j++){
