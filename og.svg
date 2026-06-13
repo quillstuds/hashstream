@@ -1,13 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
   <defs>
-    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8b5cf6"/>
-      <stop offset="1" stop-color="#6d28d9"/>
-    </linearGradient>
-    <linearGradient id="stream" x1="11" y1="0" x2="54" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="1"/>
-    </linearGradient>
+    <style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');</style>
     <radialGradient id="glowP" cx="1010" cy="70" r="640" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#7c58ed" stop-opacity="0.22"/>
       <stop offset="1" stop-color="#7c58ed" stop-opacity="0"/>
@@ -16,6 +9,14 @@
       <stop offset="0" stop-color="#34d399" stop-opacity="0.09"/>
       <stop offset="1" stop-color="#34d399" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="wm" x1="440" y1="0" x2="735" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#c4b5fd"/>
+    </linearGradient>
+    <!-- new mark stream gradients (mark-local 3508 space) -->
+    <linearGradient id="s1" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-949.057,0,0,-949.057,1862.66,823.467)"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <linearGradient id="s2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-949.057,0,0,-949.057,1862.66,2708.04)"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <linearGradient id="s3" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(2450.22,0,0,443.567,232.55,1765.75)"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#fff"/></linearGradient>
   </defs>
 
   <rect width="1200" height="630" fill="#07070e"/>
@@ -48,24 +49,23 @@
   <rect x="1146" y="92" width="18" height="446" rx="9" fill="#a78bfa" opacity="0.22"/>
   <rect x="1150" y="92" width="10" height="446" rx="5" fill="#a78bfa"/>
 
-  <g transform="translate(88 150) scale(2.0625)">
-    <rect width="64" height="64" rx="16" fill="url(#badge)"/>
-    <g fill="none" stroke="url(#stream)" stroke-width="5" stroke-linecap="round">
-      <line x1="11" y1="21" x2="35" y2="21"/>
-      <line x1="11" y1="32" x2="45" y2="32"/>
-      <line x1="11" y1="43" x2="35" y2="43"/>
-    </g>
-    <g fill="#ffffff">
-      <circle cx="44" cy="21" r="4.8"/>
-      <circle cx="54" cy="32" r="4.8"/>
-      <circle cx="44" cy="43" r="4.8"/>
-    </g>
+  <!-- HashStream mark (3508-unit artwork scaled to 132px at 88,150) -->
+  <g transform="translate(88 150) scale(0.0376283)">
+    <path d="M3507.87,704.45c0,-388.797 -315.653,-704.45 -704.45,-704.45l-2098.97,0c-388.797,0 -704.45,315.653 -704.45,704.45l0,2098.97c0,388.797 315.653,704.45 704.45,704.45l2098.97,0c388.797,0 704.45,-315.653 704.45,-704.45l0,-2098.97Z" fill="#6d28d9"/>
+    <circle cx="2096.12" cy="823.467" r="257.091" fill="#fff"/>
+    <circle cx="2894.23" cy="1765.75" r="233.46" fill="#fff"/>
+    <circle cx="2096.12" cy="2708.04" r="233.46" fill="#fff"/>
+    <circle cx="2938.21" cy="823.467" r="233.46" fill="#fff" fill-opacity="0.52"/>
+    <circle cx="2938.21" cy="2708.04" r="233.46" fill="#fff" fill-opacity="0.52"/>
+    <path d="M1862.65,590.007c-72.942,51.934 -120.553,137.181 -120.553,233.46c0,96.28 47.611,181.527 120.553,233.46l-849.529,0c-128.85,0 -233.46,-104.61 -233.46,-233.46c0,-128.85 104.61,-233.46 233.46,-233.46l849.529,0Z" fill="url(#s1)"/>
+    <path d="M1862.65,2474.58c-72.942,51.934 -120.553,137.181 -120.553,233.46c0,96.28 47.611,181.526 120.553,233.46l-849.529,0c-128.85,0 -233.46,-104.61 -233.46,-233.46c0,-128.85 104.61,-233.46 233.46,-233.46l849.529,0Z" fill="url(#s2)"/>
+    <path d="M2682.77,1532.29c-72.942,51.934 -120.553,137.181 -120.553,233.46c0,96.28 47.611,181.527 120.553,233.46l-2139.83,0c-128.85,0 -233.46,-104.61 -233.46,-233.46c-0,-128.85 104.61,-233.46 233.46,-233.46l2139.83,0Z" fill="url(#s3)"/>
   </g>
 
-  <text x="250" y="252" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="86" font-weight="700" letter-spacing="-2"><tspan fill="#eef0f6">Hash</tspan><tspan fill="#a78bfa">Stream</tspan></text>
+  <text x="250" y="250" font-family="'Space Grotesk', sans-serif" font-size="86" letter-spacing="-1.5"><tspan font-weight="500" fill="#eef0f6">Hash</tspan><tspan font-weight="600" fill="url(#wm)">Stream</tspan></text>
 
-  <text x="92" y="374" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="36" font-weight="600" fill="#c6cbd9">Every Hedera transaction, live.</text>
-  <text x="92" y="424" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="29" font-weight="400" fill="#8b90a5">Real-time mainnet traffic, visualized.</text>
+  <text x="92" y="374" font-family="'Inter', sans-serif" font-size="36" font-weight="600" fill="#c6cbd9">Every Hedera transaction, live.</text>
+  <text x="92" y="424" font-family="'Inter', sans-serif" font-size="29" font-weight="400" fill="#8b90a5">Real-time mainnet traffic, visualized.</text>
 
-  <text x="92" y="516" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="600" fill="#a78bfa">hashstream.app</text>
+  <text x="92" y="516" font-family="'Inter', sans-serif" font-size="30" font-weight="600" fill="#a78bfa">hashstream.app</text>
 </svg>

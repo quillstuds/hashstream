@@ -1,23 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="HashStream">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3508 3508" role="img" aria-label="HashStream">
   <defs>
-    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8b5cf6"/>
-      <stop offset="1" stop-color="#6d28d9"/>
-    </linearGradient>
-    <linearGradient id="stream" x1="11" y1="0" x2="54" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.3"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="1"/>
-    </linearGradient>
+    <linearGradient id="s1" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-949.057,0,0,-949.057,1862.66,823.467)"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <linearGradient id="s2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-949.057,0,0,-949.057,1862.66,2708.04)"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+    <linearGradient id="s3" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(2450.22,0,0,443.567,232.55,1765.75)"><stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#fff"/></linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#badge)"/>
-  <g fill="none" stroke="url(#stream)" stroke-width="5" stroke-linecap="round">
-    <line x1="11" y1="21" x2="35" y2="21"/>
-    <line x1="11" y1="32" x2="45" y2="32"/>
-    <line x1="11" y1="43" x2="35" y2="43"/>
-  </g>
-  <g fill="#ffffff">
-    <circle cx="44" cy="21" r="4.8"/>
-    <circle cx="54" cy="32" r="4.8"/>
-    <circle cx="44" cy="43" r="4.8"/>
-  </g>
+  <path d="M3507.87,704.45c0,-388.797 -315.653,-704.45 -704.45,-704.45l-2098.97,0c-388.797,0 -704.45,315.653 -704.45,704.45l0,2098.97c0,388.797 315.653,704.45 704.45,704.45l2098.97,0c388.797,0 704.45,-315.653 704.45,-704.45l0,-2098.97Z" fill="#6d28d9"/>
+  <circle cx="2096.12" cy="823.467" r="257.091" fill="#fff"/>
+  <circle cx="2894.23" cy="1765.75" r="233.46" fill="#fff"/>
+  <circle cx="2096.12" cy="2708.04" r="233.46" fill="#fff"/>
+  <circle cx="2938.21" cy="823.467" r="233.46" fill="#fff" fill-opacity="0.52"/>
+  <circle cx="2938.21" cy="2708.04" r="233.46" fill="#fff" fill-opacity="0.52"/>
+  <path d="M1862.65,590.007c-72.942,51.934 -120.553,137.181 -120.553,233.46c0,96.28 47.611,181.527 120.553,233.46l-849.529,0c-128.85,0 -233.46,-104.61 -233.46,-233.46c0,-128.85 104.61,-233.46 233.46,-233.46l849.529,0Z" fill="url(#s1)"/>
+  <path d="M1862.65,2474.58c-72.942,51.934 -120.553,137.181 -120.553,233.46c0,96.28 47.611,181.526 120.553,233.46l-849.529,0c-128.85,0 -233.46,-104.61 -233.46,-233.46c0,-128.85 104.61,-233.46 233.46,-233.46l849.529,0Z" fill="url(#s2)"/>
+  <path d="M2682.77,1532.29c-72.942,51.934 -120.553,137.181 -120.553,233.46c0,96.28 47.611,181.527 120.553,233.46l-2139.83,0c-128.85,0 -233.46,-104.61 -233.46,-233.46c-0,-128.85 104.61,-233.46 233.46,-233.46l2139.83,0Z" fill="url(#s3)"/>
 </svg>
