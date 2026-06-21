@@ -71,7 +71,43 @@ body.ambient #river{background:var(--bg)}
 #sparkbox{padding:8px 12px 6px;width:230px}
 #sparkbox .cl{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--faint);margin-bottom:4px;display:flex;justify-content:space-between}
 #spark{display:block;width:100%;height:34px}
-.caption{position:fixed;bottom:2px;left:50%;transform:translateX(-50%);font-size:10.5px;color:var(--faint);z-index:4;padding:2px 10px;white-space:nowrap}
+.chip[data-tip],#sparkbox[data-tip]{position:relative;cursor:help}
+.chip[data-tip]::after,#sparkbox[data-tip]::after{
+  content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 10px);
+  width:max-content;max-width:230px;padding:9px 12px;
+  background:rgba(16,16,28,0.94);border:1px solid var(--panel-border);border-radius:10px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font:400 11.5px/1.5 'Inter',system-ui,sans-serif;color:var(--text);
+  letter-spacing:0;text-transform:none;text-align:left;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  opacity:0;transform:translateY(4px);transition:opacity .16s ease,transform .16s ease;
+  pointer-events:none;z-index:30;
+}
+.chip[data-tip]::before,#sparkbox[data-tip]::before{
+  content:'';position:absolute;left:18px;bottom:calc(100% + 4px);
+  border:6px solid transparent;border-top-color:rgba(16,16,28,0.94);
+  opacity:0;transition:opacity .16s ease;pointer-events:none;z-index:30;
+}
+#chiptip{position:fixed;z-index:40;max-width:240px;padding:9px 12px;
+  background:rgba(16,16,28,0.96);border:1px solid var(--panel-border);border-radius:10px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font:400 12px/1.5 'Inter',system-ui,sans-serif;color:var(--text);
+  box-shadow:0 10px 30px rgba(0,0,0,0.55);
+  opacity:0;transform:translateY(4px);transition:opacity .16s ease,transform .16s ease;
+  pointer-events:none;display:none}
+#chiptip.show{opacity:1;transform:none}
+#chiptip::after{content:'';position:absolute;top:100%;left:var(--ax,20px);
+  border:6px solid transparent;border-top-color:rgba(16,16,28,0.96)}
+#sparkbox[data-tip]::after{left:auto;right:0}
+#sparkbox[data-tip]::before{left:auto;right:18px}
+.chip[data-tip]:hover::after,.chip[data-tip]:focus-visible::after,
+#sparkbox[data-tip]:hover::after,#sparkbox[data-tip]:focus-visible::after{opacity:1;transform:translateY(0)}
+.chip[data-tip]:hover::before,.chip[data-tip]:focus-visible::before,
+#sparkbox[data-tip]:hover::before,#sparkbox[data-tip]:focus-visible::before{opacity:1}
+.caption{position:fixed;bottom:4px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--faint);z-index:4;padding:3px 10px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.caption a{color:var(--muted);text-decoration:none;transition:color .2s,opacity .2s;display:inline-flex;align-items:center}
+.caption a:hover{color:var(--text)}
+.caption .sep{color:var(--faint)}
 
 .ambient-tps{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:4;text-align:center}
 .ambient-tps,.ambient-tps *{pointer-events:none}
@@ -128,8 +164,9 @@ body.ambient .legend{display:flex}
   .chips{flex-wrap:nowrap;gap:7px}
   .chip{flex:none;padding:6px 11px;font-size:10px;white-space:nowrap;border-radius:11px}
   .chip b{font-size:13px}
+  .chip[data-tip]::after,.chip[data-tip]::before{display:none}
   #sparkbox{display:none}
-  .caption{display:none}
+  .caption{font-size:10px;gap:6px;bottom:auto;padding:3px 8px}
   .legend{flex-wrap:wrap;justify-content:center;gap:5px 13px;padding:9px 12px}
   .lgi{font-size:10.5px}
   .ambient-tps .v{font-size:clamp(56px,20vw,150px)}
@@ -193,13 +230,13 @@ body.ambient .legend{display:flex}
 
 <div class="hud statbar">
   <div class="chips">
-    <div class="chip glass">Fee revenue<b class="num" id="s-rev">—</b></div>
-    <div class="chip glass">Daily pace<b class="num" id="s-day">—</b></div>
-    <div class="chip glass">HBAR price<b class="num" id="s-px">—</b></div>
-    <div class="chip glass">Success<b class="num" id="s-ok">—</b></div>
-    <div class="chip glass">While you've watched<b class="num" id="s-watch">0 tx · $0.0000</b></div>
+    <div class="chip glass" tabindex="0" data-tip="Fees the network is collecting right now in USD — the current rate projected to one hour.">Fee revenue<b class="num" id="s-rev">—</b></div>
+    <div class="chip glass" tabindex="0" data-tip="Transactions the network would process in 24 hours at the current rate.">Daily pace<b class="num" id="s-day">—</b></div>
+    <div class="chip glass" tabindex="0" data-tip="Live HBAR price in USD, used to convert transaction fees into dollars.">HBAR price<b class="num" id="s-px">—</b></div>
+    <div class="chip glass" tabindex="0" data-tip="Share of recent transactions that reached consensus successfully.">Success<b class="num" id="s-ok">—</b></div>
+    <div class="chip glass" tabindex="0" data-tip="Transactions and fees that have flowed past since you opened HashStream.">While you've watched<b class="num" id="s-watch">0 tx · $0.0000</b></div>
   </div>
-  <div class="glass" id="sparkbox">
+  <div class="glass" id="sparkbox" tabindex="0" data-tip="Transactions per second in each of the most recent blocks.">
     <div class="cl"><span>block throughput</span><span id="avgnote" class="num"></span></div>
     <canvas id="spark"></canvas>
   </div>
@@ -213,7 +250,14 @@ body.ambient .legend{display:flex}
 </div>
 <div class="hud legend glass" id="legend"></div>
 
-<p class="caption" id="caption">every transaction is displayed · size = fee · tap or hover a dot to inspect</p>
+<div id="chiptip" role="tooltip"></div>
+
+<div class="caption" id="credit">
+  <span class="cby">Made by</span>
+  <a class="qlink" href="https://quillstudios.com.au" target="_blank" rel="noopener">Quill Studios</a>
+  <span class="sep">·</span>
+  <a href="https://x.com/Cryptozoologis7" target="_blank" rel="noopener">Follow on X @crypto_zoologist</a>
+</div>
 
 <div id="tip">
   <div class="th">
@@ -327,7 +371,10 @@ function layout(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   TOP=Math.max(document.querySelector('.brand').getBoundingClientRect().bottom,
                document.querySelector('.tps').getBoundingClientRect().bottom)+(isMobile?12:14);
-  BOT=document.querySelector('.statbar').offsetHeight+(isMobile?14:34);
+  const sbH=document.querySelector('.statbar').offsetHeight;
+  BOT=sbH+(isMobile?14:34);
+  // On mobile the stat bar sits at bottom:0, so float the credit just above it.
+  $('credit').style.bottom=isMobile?(sbH+8)+'px':'';
   laneH=Math.max((H-TOP-BOT)/Math.max(lanes.length,3),46);
   const sp=$('spark'),r=sp.getBoundingClientRect();
   sp.width=Math.round(r.width*dpr);sp.height=Math.round(34*dpr);
@@ -489,9 +536,6 @@ async function poll(){
         const t=fetched[r];
         spawnDot(now,Math.random()*POLL_MS*1.3,t.name,t.charged_tx_fee,null);
       }
-      $('caption').textContent='every transaction is displayed ('+fmtInt(totalNew)+' this cycle) · detailed records for '+fmtInt(fetched.length)+' · tap or hover to inspect';
-    }else{
-      $('caption').textContent='every transaction is displayed · size = fee · tap or hover a dot to inspect';
     }
     spawnQueue.sort((a,b)=>a.at-b.at);
     if(spawnQueue.length>20000)spawnQueue=spawnQueue.slice(-20000);
@@ -639,13 +683,15 @@ function frame(t){
         if(ambient?p.y>=H+30:p.x>=endX){
           arrivals++;
           if(!ambient&&arrivals%burstEvery===0&&embers.length<EMBER_CAP){
-            const k=2+Math.round(p.r*0.9);
+            // The same tiny-spark crackle as the ambient view, but smaller,
+            // slower and dimmer — a faint twinkle where the dot arrives.
+            const k=2+(Math.random()*2|0);                 // 2–3 sparks
             for(let j=0;j<k;j++){
-              const ang=Math.random()*6.283,spd=24+Math.random()*70*(0.6+p.r/5);
+              const ang=Math.random()*6.283,spd=8+Math.random()*26;
               embers.push({x:endX,y:p.y,
-                vx:Math.cos(ang)*spd+36,vy:Math.sin(ang)*spd,
-                life:0.22+Math.random()*0.32,ttl:0,
-                r:Math.max(0.7,p.r*(0.22+Math.random()*0.38)),c:p.c});
+                vx:Math.cos(ang)*spd*0.5+8,vy:Math.sin(ang)*spd,
+                life:0.28+Math.random()*0.34,ttl:0,fd:1.3+Math.random()*1.0,
+                r:0.22+Math.random()*0.3,c:p.c,spark:true,dim:0.5});
             }
           }
           txWatched++;feesWatched+=p.fee/1e8*usdPerHbar;
@@ -737,7 +783,7 @@ function frame(t){
       const lf=1-e.ttl/e.life;
       if(e.spark){
         const ssz=e.r*4.4*(0.5+0.5*lf);                 // shrinks as it burns up
-        ctx.globalAlpha=Math.min(1,Math.pow(lf,e.fd)*1.2); // bright spark, ember fade
+        ctx.globalAlpha=Math.min(1,Math.pow(lf,e.fd)*1.2)*(e.dim||1); // bright spark, ember fade
         ctx.drawImage(sprite(e.c),(e.x-ssz/2)|0,(e.y-ssz/2)|0,ssz,ssz);
       }else{
         const ssz=e.r*4.4;
@@ -823,6 +869,27 @@ $('offline-retry').addEventListener('click',()=>{
   if(bootTimer){clearTimeout(bootTimer);bootTimer=null;}
   if(booted)run();else boot();
 });
+// Tap-to-reveal stat tooltips on touch devices (CSS hover tooltips are clipped by the scrollable stat bar)
+if(isTouch){
+  const chiptip=$('chiptip');let chiptipFor=null,hideT=null;
+  function hideChiptip(){chiptip.classList.remove('show');chiptipFor=null;
+    clearTimeout(hideT);hideT=setTimeout(()=>{if(!chiptipFor)chiptip.style.display='none';},180);}
+  function showChiptip(el){
+    const tip=el.getAttribute('data-tip');if(!tip)return;
+    clearTimeout(hideT);chiptip.textContent=tip;chiptip.style.display='block';
+    chiptip.style.left=chiptip.style.top='0px';
+    const r=el.getBoundingClientRect(),tw=chiptip.offsetWidth,th=chiptip.offsetHeight;
+    const left=Math.max(8,Math.min(r.left+r.width/2-tw/2,innerWidth-tw-8));
+    chiptip.style.left=left+'px';chiptip.style.top=(r.top-th-10)+'px';
+    chiptip.style.setProperty('--ax',Math.max(10,Math.min(r.left+r.width/2-left-6,tw-22))+'px');
+    chiptipFor=el;requestAnimationFrame(()=>chiptip.classList.add('show'));
+  }
+  document.querySelectorAll('.chip[data-tip],#sparkbox[data-tip]').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();chiptipFor===el?hideChiptip():showChiptip(el);});
+  });
+  document.addEventListener('click',()=>{if(chiptipFor)hideChiptip();});
+  window.addEventListener('scroll',()=>{if(chiptipFor)hideChiptip();},true);
+}
 async function boot(){
   try{
     await initLanes();
