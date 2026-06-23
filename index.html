@@ -162,14 +162,14 @@ body.ambient .legend{display:flex}
   .btn .blab{display:none}
   .btn .bic svg{width:18px;height:18px}
 
-  .statbar{left:0;right:0;bottom:0;padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));gap:7px;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;align-items:stretch;scrollbar-width:none;-webkit-overflow-scrolling:touch;pointer-events:auto;touch-action:pan-x}
+  .statbar{left:0;right:0;bottom:0;padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));gap:7px;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;align-items:stretch;scrollbar-width:none;-webkit-overflow-scrolling:touch;pointer-events:auto;touch-action:pan-x}
   .statbar::-webkit-scrollbar{display:none}
   .chips{flex-wrap:nowrap;gap:7px}
   .chip{flex:none;padding:6px 11px;font-size:10px;white-space:nowrap;border-radius:11px}
   .chip b{font-size:13px}
   .chip[data-tip]::after,.chip[data-tip]::before{display:none}
   #sparkbox{display:none}
-  .caption{font-size:10px;gap:6px;bottom:auto;padding:3px 8px}
+  .caption{font-size:10px;gap:6px;bottom:0;padding:4px 8px max(5px,env(safe-area-inset-bottom))}
   .legend{flex-wrap:wrap;justify-content:center;gap:5px 13px;padding:9px 12px}
   .lgi{font-size:10.5px}
   .ambient-tps .v{font-size:clamp(56px,20vw,150px)}
@@ -429,10 +429,17 @@ function layout(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   TOP=Math.max(document.querySelector('.brand').getBoundingClientRect().bottom,
                document.querySelector('.tps').getBoundingClientRect().bottom)+(isMobile?12:14);
-  const sbH=document.querySelector('.statbar').offsetHeight;
-  BOT=sbH+(isMobile?14:34);
-  // On mobile the stat bar sits at bottom:0, so float the credit just above it.
-  $('credit').style.bottom=isMobile?(sbH+8)+'px':'';
+  const sb=document.querySelector('.statbar'),credit=$('credit'),sbH=sb.offsetHeight;
+  if(isMobile){
+    // Credit pinned to the very bottom, with the stat bar raised to sit above it.
+    credit.style.bottom='0px';
+    const ch=credit.offsetHeight;
+    sb.style.bottom=ch+'px';
+    BOT=sbH+ch+14;
+  }else{
+    credit.style.bottom='';sb.style.bottom='';
+    BOT=sbH+34;
+  }
   laneH=Math.max((H-TOP-BOT)/Math.max(lanes.length,3),46);
   const sp=$('spark'),r=sp.getBoundingClientRect();
   sp.width=Math.round(r.width*dpr);sp.height=Math.round(34*dpr);
