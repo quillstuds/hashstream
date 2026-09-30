@@ -916,10 +916,14 @@ function showTip(p){
 let lastPointerType='mouse',tapPending=false,mouseMoved=false;
 cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;mouseMoved=true;}});
 cv.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'){mouse.x=mouse.y=-99;}});
-cv.addEventListener('pointerdown',e=>{lastPointerType=e.pointerType;if(e.pointerType!=='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;tapPending=true;hoverP=null;$('tip').style.display='none';if(network){netHideTip();net.focusId=null;}}});
+cv.addEventListener('pointerdown',e=>{lastPointerType=e.pointerType;if(e.pointerType!=='mouse'){mouse.x=e.clientX;mouse.y=e.clientY;tapPending=true;hoverP=null;$('tip').style.display='none';if(network){netReleaseTx();netHideTip();net.focusId=null;}}});
 cv.addEventListener('click',()=>{
   if(lastPointerType!=='mouse')return;
-  if(network){const u=netUrl(net.hover);if(u)window.open(u,'_blank','noopener');return;}
+  if(network){
+    if(net.hoverP)window.open('https://hashscan.io/mainnet/transaction/'+net.hoverP.tx.transaction_id,'_blank','noopener');
+    else{const u=netUrl(net.hover);if(u)window.open(u,'_blank','noopener');}
+    return;
+  }
   if(hoverP&&hoverP.tx)window.open('https://hashscan.io/mainnet/transaction/'+hoverP.tx.transaction_id,'_blank');
 });
 $('ntip').addEventListener('mouseenter',()=>ntipHover=true);
@@ -946,7 +950,7 @@ let nodeAccts=new Set();for(let i=3;i<=40;i++)nodeAccts.add('0.0.'+i);
 const SYS_NAMES={'0.0.359':'Token Service system contract','0.0.360':'Exchange rate system contract','0.0.361':'PRNG system contract'};
 const KIND_NAME={topic:'Topic',contract:'Contract',token:'Token',account:'Account',payer:'Account',file:'File',schedule:'Schedule',entity:'Entity',core:'Hedera network'};
 const net={nodes:new Map(),edges:new Map(),parts:[],ripples:[],recent:[],arr:[],names:{},fetching:new Set(),
-  clock:0,lastPrune:0,lastName:0,lastList:0,focusId:null,hover:null,block:null};
+  clock:0,lastPrune:0,lastName:0,lastList:0,focusId:null,hover:null,hoverP:null,block:null};
 net.core={id:'core',kind:'core',x:0,y:0,vx:0,vy:0,rx:0,pay:0,tc:{},last:0,flash:0,refs:0,placed:true,rad:20,col:'#a78bfa'};
 
 async function loadNodeAccts(){
@@ -1024,7 +1028,7 @@ function netAdd(li,fee,tx,color,age){
     if(a&&!a.placed)netPlace(a,b,b.rad+18+Math.random()*20);
   }
   b.refs++;if(a)a.refs++;
-  net.parts.push({a,b,e,t0:net.clock-age,life:netLife()*1000,c:color,r:feeRadius(fee),big:fee>=BIG_FEE,ang:Math.random()*6.283});
+  net.parts.push({a,b,e,tx,t0:net.clock-age,life:netLife()*1000,c:color,r:feeRadius(fee),big:fee>=BIG_FEE,ang:Math.random()*6.283});
   if(net.parts.length>7000){const q=net.parts.shift();q.b.refs--;if(q.a)q.a.refs--;}
 }
 
@@ -1172,7 +1176,9 @@ function netDraw(t,dt,sim){
   // Transactions in flight: a comet along the curve, oriented to its heading.
   let w=0;const lodN=net.parts.length,tails=lodN<2500;
   for(let i=0;i<net.parts.length;i++){
-    const p=net.parts[i],u=(now-p.t0)/p.life;
+    const p=net.parts[i];
+    if(p.frozen&&sim)p.t0+=dt*1000;            // hovered: hold it where it is
+    const u=(now-p.t0)/p.life;
     if(u>=1){
       p.b.refs--;if(p.a)p.a.refs--;
       if(u<1.5&&network){
@@ -1185,6 +1191,8 @@ function netDraw(t,dt,sim){
     net.parts[w++]=p;
     if(!p.b.placed||(p.a&&!p.a.placed))continue;
     const q=netPos(p,u<0?0:u),on=!focus||p.b===focus||p.a===focus;
+    if(p.frozen&&p.fx!=null){q.x=p.fx;q.y=p.fy;}  // pinned under the pointer
+    p.hx=q.x;p.hy=q.y;
     const a=Math.min(1,u*6)*(u>0.85?1-(u-0.85)/0.15*0.5:1)*(on?1:0.18);
     if(tails){
       const len=Math.hypot(q.tx,q.ty)||1,cs=q.tx/len,sn=q.ty/len;
@@ -1198,6 +1206,12 @@ function netDraw(t,dt,sim){
     if(p.big){
       const fw=(isMobile?30:54)+p.r*6,fh=Math.max(2.2,p.r);
       ctx.globalAlpha=a*0.65;ctx.drawImage(flare(p.c),q.x-fw/2,q.y-fh/2,fw,fh);
+    }
+    if(p===net.hoverP){
+      ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=0.9;ctx.strokeStyle='#fff';ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.arc(q.x,q.y,p.r+6,0,6.283);ctx.stroke();
+      ctx.globalCompositeOperation='lighter';
     }
   }
   net.parts.length=w;
@@ -1335,25 +1349,53 @@ function netShowTip(n){
   tip.style.left=Math.max(12,Math.min(W-r.width-12,x))+'px';tip.style.top=Math.max(12,Math.min(H-r.height-12,y))+'px';
 }
 function netHideTip(){net.hover=null;$('ntip').style.display='none';}
+// A hovered transaction freezes mid-flight (as in the other views) and its
+// route lights up; moving off it lets it fly on.
+function netReleaseTx(){
+  const p=net.hoverP;if(!p)return;
+  p.frozen=false;p.fx=null;net.hoverP=null;$('tip').style.display='none';
+  if(!net.listFocus&&!net.hover)net.focusId=null;
+}
 let ntipHover=false,ntipHideT=0;
 function netPointer(t){
-  const h=net.hover;
+  const h=net.hover,hp=net.hoverP,touch=lastPointerType!=='mouse';
   if(h){
     const d=Math.hypot(h.x-mouse.x,h.y-mouse.y);
     if((mouse.x>=0&&d<h.rad+10)||ntipHover)ntipHideT=t;
     else if(t-ntipHideT>250){netHideTip();if(!net.listFocus)net.focusId=null;}
   }
-  if(!net.hover&&mouse.x>=0&&((lastPointerType==='mouse'&&mouseMoved)||tapPending)){
-    let best=null,bd=1e9;
+  if(hp){
+    const gone=!net.parts.includes(hp),d=Math.hypot(hp.hx-mouse.x,hp.hy-mouse.y);
+    if(!gone&&((mouse.x>=0&&d<Math.max(hp.r*2.5,touch?24:14))||tipHover))tipHideT=t;
+    else if(gone||t-tipHideT>250)netReleaseTx();
+  }
+  if(!net.hover&&!net.hoverP&&mouse.x>=0&&((!touch&&mouseMoved)||tapPending)){
+    // Directly over a body → the body (so dots arriving at a hub never steal
+    // it); otherwise a transaction in mid-flight; otherwise a body close by.
+    let best=null,bd=1e9,direct=false;
     for(const n of [...net.nodes.values(),net.core]){
       if(!n.placed)continue;
-      const d=Math.hypot(n.x-mouse.x,n.y-mouse.y),lim=Math.max(n.rad+6,lastPointerType==='mouse'?9:18);
-      if(d<lim&&d<bd){bd=d;best=n;}
+      const d=Math.hypot(n.x-mouse.x,n.y-mouse.y),lim=Math.max(n.rad+6,touch?18:9);
+      if(d<lim&&d<bd){bd=d;best=n;direct=d<=n.rad+2;}
     }
-    if(best){net.hover=best;net.focusId=best.id;netShowTip(best);ntipHideT=t;}
+    let bp=null;
+    if(!direct){
+      let pd=1e9;
+      for(const p of net.parts){
+        if(!p.tx||p.hx==null)continue;
+        const u=(net.clock-p.t0)/p.life;
+        if(u<0.08||u>0.92)continue;              // only mid-flight, clear of the bodies
+        const d=Math.hypot(p.hx-mouse.x,p.hy-mouse.y);
+        if(d<Math.max(p.r*2.5,touch?22:12)&&d<pd){pd=d;bp=p;}
+      }
+    }
+    if(bp){
+      net.hoverP=bp;bp.frozen=true;bp.fx=bp.hx;bp.fy=bp.hy;net.focusId=bp.b.id;tipHideT=t;
+      showTip({x:bp.hx,y:bp.hy,c:bp.c,r:bp.r,tx:bp.tx});
+    }else if(best){net.hover=best;net.focusId=best.id;netShowTip(best);ntipHideT=t;}
   }
   mouseMoved=false;tapPending=false;
-  cv.style.cursor=net.hover&&netUrl(net.hover)?'pointer':'default';
+  cv.style.cursor=net.hoverP||(net.hover&&netUrl(net.hover))?'pointer':'default';
 }
 
 let stressAcc=0,fpsEma=60,uiAt=0,netAt=0;
@@ -1781,7 +1823,7 @@ function setMode(m){
   const old=geom();
   mode=m;ambient=m==='ambient';network=m==='network';
   try{localStorage.setItem('hs-mode',m);}catch(e){}
-  hoverP=null;$('tip').style.display='none';netHideTip();net.focusId=null;
+  netReleaseTx();hoverP=null;$('tip').style.display='none';netHideTip();net.focusId=null;
   applyMode();buildLegend();layout(old);
   if(network)netWarm();
 }
