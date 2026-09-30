@@ -125,7 +125,6 @@ body.ambient #topbar,html:fullscreen #topbar{display:none!important}
 #topbar .tbtxt{overflow:hidden;text-overflow:ellipsis;min-width:0}
 #topbar .tbgo{flex:none;color:#c4b5fd;font-weight:500;text-decoration:none;transition:color .2s}
 #topbar .tbgo:hover{color:#ddd3ff;text-decoration:underline;text-underline-offset:3px}
-@media(max-width:1180px){#topbar .tbmore{display:none}}
 #topbar .tbx{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;display:flex;align-items:center;justify-content:center;
   background:none;border:none;border-radius:6px;color:var(--faint);cursor:pointer;transition:background .2s,color .2s}
 #topbar .tbx:hover{background:rgba(255,255,255,0.08);color:var(--text)}
@@ -249,7 +248,7 @@ body.network .netpanel{display:block}
   .caption{font-size:10px;gap:6px;bottom:0;padding:4px 8px max(5px,env(safe-area-inset-bottom))}
   body.hasbar{--bar:calc(28px + env(safe-area-inset-top))}
   #topbar{height:auto;min-height:28px;padding:env(safe-area-inset-top) 34px 0 10px;font-size:11px}
-  #topbar .tbdate,#topbar .udot{display:none}
+  #topbar .tblead,#topbar .udot{display:none}
   #topbar .tbin{gap:6px}
   #promo{left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));width:auto;padding:13px 14px}
   #promo h3{font-size:15px}
@@ -302,7 +301,7 @@ body.network .netpanel{display:block}
 <canvas id="river" role="img" aria-label="Full-screen animated stream of glowing dots, one per real Hedera mainnet transaction, flowing rightward across the screen; lanes are transaction types, dot size reflects fee paid; hover or tap a dot to inspect that transaction"></canvas>
 
 <div id="topbar" role="region" aria-label="Announcement">
-  <div class="tbin"><span class="udot"></span><span class="tbtxt"><b>Unstealth</b> — crowdsourced Hedera intelligence<span class="tbmore">, from the makers of HashStream</span><span class="tbdate"> · private beta opens October</span></span><a class="tbgo" id="bar-unst" href="#" target="_blank" rel="noopener">Learn more →</a></div>
+  <div class="tbin"><span class="udot"></span><span class="tbtxt"><span class="tblead">Let's bring the Hedera network out of stealth. </span>Join the <b>Unstealth</b> private beta.</span><a class="tbgo" id="bar-unst" href="#" target="_blank" rel="noopener">Learn more →</a></div>
   <button class="tbx" id="bar-x" type="button" aria-label="Dismiss announcement">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12 M18 6l-12 12"/></svg>
   </button>
@@ -401,7 +400,7 @@ body.network .netpanel{display:block}
   </button>
   <div class="pe"><span class="udot"></span>Private beta · October</div>
   <h3>Unstealth beta</h3>
-  <p>From the makers of HashStream: a crowdsourced intelligence platform for Hedera — investigate the accounts, contracts and organisations behind the traffic you're watching.</p>
+  <p>Crowdsourced intelligence platform for the Hedera network built to allow the community to understand exactly who and what is driving transactions and revenue.</p>
   <a class="pgo" id="promo-go" href="#" target="_blank" rel="noopener"></a>
 </aside>
 
