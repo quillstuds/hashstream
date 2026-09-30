@@ -450,7 +450,6 @@ body.network .netpanel{display:block}
       <ul>
         <li><span class="di"></span><span>Every <b>dot is one transaction</b>. It enters on the left and flows right, sorted into a <b>lane by type</b> — crypto transfer, consensus message (HCS), smart contract call, and more.</span></li>
         <li><span class="di"></span><span>A dot's <b>size reflects the fee</b> paid — larger dots cost more, and high-fee transactions <b>flare</b>.</span></li>
-        <li><span class="di"></span><span>Faint dashed lines are <b>block boundaries</b> — each ~2-second Hedera record file travels with the dots it contains, and the bar on the right pulses as each one lands.</span></li>
         <li><span class="di"></span><span><b>Tap or hover any dot</b> to inspect its details and open it on HashScan.</span></li>
       </ul>
     </div>
@@ -616,7 +615,7 @@ const laneY=i=>TOP+i*laneH+laneH/2;
 const riverX0=()=>LABEL_W-(isMobile?6:40),riverX1=()=>W-(isMobile?8:12);
 let lanes=[],laneIdx={};
 let displayTps=0,blockTps=0,avgTps=0,streamTps=0,usdPerHbar=0,sparkPts=[];
-let particles=[],embers=[],marks=[],blockHist=[];
+let particles=[],embers=[],blockHist=[];
 // Transactions are replayed on a consensus-time clock: each dot enters the
 // river exactly playDelay seconds after it reached consensus, so bursts and
 // lulls on chain show up on screen with their real rhythm.
@@ -626,19 +625,18 @@ let cursorTs=null,lastBlockNum=0,rateAt=0,lagHist=[],playDelay=0,delayPad=2,poll
 // same events give the headline rate (dots still crossing the screen) and the
 // 30s lane stats, so every number on screen is counted from the dots you see.
 let dlog=[],hHead=0,sHead=0,logFirst=0,logLast=0,statFee=0;
-let barPulse=0,flowOff=0;
+let flowOff=0;
 const EMBER_CAP=1400;
 let txWatched=0,feesWatched=0,paused=false,arrivals=0,ambient=false,network=false,mode='lanes';
 let mouse={x:-99,y:-99},hoverP=null,tipHover=false,tipHideT=0;
 window.__fps=0;
 
 function geom(){return {W,H,x0:riverX0(),x1:riverX1(),TOP,laneH,ambient};}
-// Carry every live dot (and block marker) across a resize or a view switch by
+// Carry every live dot across a resize or a view switch by
 // its progress along the river, so what's on screen never jumps or empties.
 function reflow(o){
   const g=geom();
   if(!o.W||!g.W)return;
-  const fx=(g.x1-g.x0)/(o.x1-o.x0),fy=(g.H+60)/(o.H+60);
   for(const p of particles){
     const prog=o.ambient?(p.y+30)/(o.H+60):(p.x-o.x0)/(o.x1-o.x0);
     const secs=o.ambient?(o.H+60)/p.vy:(o.x1-o.x0)/p.vx;     // this dot's crossing time
@@ -654,8 +652,6 @@ function reflow(o){
       p.x=g.x0+prog*(g.x1-g.x0);p.y=p.by;p.vx=(g.x1-g.x0)/secs;p.vy=0;
     }
   }
-  if(ambient)marks=[];
-  else for(const m of marks){m.x=g.x0+(m.x-o.x0)*fx;m.vx*=fx;}
   embers=[];
 }
 function layout(old=geom()){
@@ -719,8 +715,7 @@ function pushParticle(li,color,r,fee,tx,tr){
     const jit=0.85+Math.random()*0.3;
     p={x:Math.random()*W,y:-30,vx:0,vy:(H+60)/(tr*jit),c:color,r,fee,tx,li,fl:Math.random()*6.283,big:fee>=BIG_FEE,age:0,wt:0};
   }else{
-    // Tight speed spread keeps each block's dots travelling together between
-    // its boundary markers.
+    // Tight speed spread keeps dots that arrived together travelling together.
     const x0=riverX0(),x1=riverX1(),jit=0.97+Math.random()*0.06,by=laneY(li)+(Math.random()*2-1)*laneH*0.33;
     p={x:x0,y:by,by,vx:(x1-x0)/(tr*jit),vy:0,c:color,r,fee,tx,li,ph:Math.random()*6.283,
        big:fee>=BIG_FEE,age:0,wt:0};
@@ -1412,10 +1407,9 @@ function frame(t){
     if(gap>0.25&&!paused){
       const skip=gap-dt;
       for(const p of particles){p.x+=p.vx*skip;p.y+=p.vy*skip;p.wt+=skip;}
-      for(const m of marks)m.x+=m.vx*skip;
       particles=particles.filter(p=>ambient?p.y<H+30:p.x<x1);
       net.clock+=skip*1000;
-      marks=marks.filter(m=>m.x<x1);embers=[];
+      embers=[];
       if(hoverP&&!particles.includes(hoverP)){hoverP=null;$('tip').style.display='none';}
     }
     if(sim)net.clock+=dt*1000;
@@ -1450,10 +1444,7 @@ function frame(t){
         const m=markQueue[mqHead++],late=(t-m.at)/1000;
         if(late>tr)continue;
         net.block={num:m.num,n:m.n};
-        if(network){net.ripples.push({core:true,t0:net.clock-late*1000,life:1800,c:'#a78bfa'});net.core.flash=1;continue;}
-        if(ambient)continue;
-        const vx=(x1-x0)/tr;
-        marks.push({x:x0+vx*Math.max(0,late),vx,num:m.num,n:m.n});
+        if(network){net.ripples.push({core:true,t0:net.clock-late*1000,life:1800,c:'#a78bfa'});net.core.flash=1;}
       }
     }else if(paused){
       // Anything that comes due while paused is never shown — skip it.
@@ -1480,7 +1471,6 @@ function frame(t){
       }
       const kF=Math.exp(-dt*3),kH=Math.exp(-dt*2.2),kD=Math.min(1,dt*3);
       for(const l of lanes){l.flash*=kF;l.hit*=kH;l.disp+=(l.w/tr-l.disp)*kD;}
-      barPulse*=Math.exp(-dt*2);
       netDecay(dt);
     }
     if(t-netAt>1000&&lanes.length){
@@ -1542,18 +1532,6 @@ function frame(t){
       }
       ctx.strokeStyle='rgba(255,255,255,0.05)';
       ctx.beginPath();ctx.moveTo(0,bandY1);ctx.lineTo(W,bandY1);ctx.stroke();
-
-      // Block boundaries: each Hedera record file (~2s) rides the river as a
-      // faint dashed line trailing the dots it carried.
-      ctx.lineWidth=1;ctx.setLineDash([3,6]);
-      for(let i=marks.length-1;i>=0;i--){
-        const m=marks[i];
-        if(sim){m.x+=m.vx*dt;if(m.x>=x1){barPulse=Math.min(1,barPulse+0.6);marks.splice(i,1);continue;}}
-        m.a=Math.min(1,(m.x-x0)/80)*Math.min(1,(x1-m.x)/120);
-        ctx.strokeStyle='rgba(196,181,253,'+(0.13*m.a)+')';
-        ctx.beginPath();ctx.moveTo((m.x|0)+0.5,bandY0-12);ctx.lineTo((m.x|0)+0.5,bandY1-4);ctx.stroke();
-      }
-      ctx.setLineDash([]);
 
       ctx.globalCompositeOperation='lighter';
       // Flowing lane tracks: a dotted centre line drifting right at dot speed.
@@ -1703,14 +1681,14 @@ function frame(t){
     }
 
     // Consensus bar: where every dot lands. Each lane's segment glows with its
-    // recent arrivals, and the whole bar pulses as each block marker lands.
+    // recent arrivals.
     if(!ambient&&!network&&lanes.length){
       const y0=bandY0+6,y1=bandY1-6,bh=y1-y0,bar=sprite('#a78bfa');
       const bw=isMobile?14:32,hw=isMobile?12:22;
-      ctx.globalAlpha=(0.16+barPulse*0.3)*(isMobile?0.7:1);
+      ctx.globalAlpha=0.16*(isMobile?0.7:1);
       ctx.drawImage(bar,x1-bw/2,y0-24,bw,bh+48);
       const lg=ctx.createLinearGradient(0,y0,0,y1);
-      lg.addColorStop(0,'rgba(214,200,255,0)');lg.addColorStop(0.5,'rgba(214,200,255,'+(0.45+barPulse*0.4)+')');lg.addColorStop(1,'rgba(214,200,255,0)');
+      lg.addColorStop(0,'rgba(214,200,255,0)');lg.addColorStop(0.5,'rgba(214,200,255,0.45)');lg.addColorStop(1,'rgba(214,200,255,0)');
       ctx.globalAlpha=1;ctx.fillStyle=lg;ctx.fillRect(x1-0.75,y0,1.5,bh);
       for(const l of lanes){
         if(l.hit<0.01)continue;
@@ -1750,14 +1728,6 @@ function frame(t){
         const stats=isMobile?(fmtNum(lr)+'/s · '+share.toFixed(0)+'% · '+fmtUsd(usd)+'/hr')
                             :(fmtNum(lr)+' tx/s · '+share.toFixed(1)+'% · '+fmtUsd(usd)+'/hr');
         ctx.fillText(stats,lblX,ty+(isMobile?8:9));
-      }
-      if(!isMobile){
-        ctx.font='10px "Space Grotesk"';
-        for(const m of marks){
-          if(!(m.a>0.02))continue;
-          ctx.fillStyle='rgba(167,160,200,'+(0.5*m.a)+')';
-          ctx.fillText('block '+fmtInt(m.num)+' · '+m.n+' tx',m.x+5,bandY0-5);
-        }
       }
     }
     if(sim)$('s-watch').textContent=fmtInt(txWatched)+' tx · $'+feesWatched.toFixed(4);

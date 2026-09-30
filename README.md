@@ -18,7 +18,6 @@ A full-screen, real-time visualization of [Hedera](https://hedera.com) mainnet a
 - **A "transaction river"** where every transaction is drawn as a dot — at any rate. Detailed records are fetched per-transaction; beyond the API's reach, dot counts are reconciled against block-header totals so the on-screen count always matches the real count.
 - **Fixed type lanes** chosen at load time from a rate-weighted sample of the past 3 hours of traffic. Any type accounting for ≥1% of transactions gets its own lane (ordered by share); everything rarer is combined into a permanent "Other transactions" lane. Lanes never reorder or appear/disappear during a session.
 - **Per-lane rate and share** of the dots on screen, plus **fee revenue** over a rolling 30-second window.
-- **Block boundaries** — each ~2s Hedera record file rides the river as a faint marker with its block number and transaction count; the consensus bar pulses as each one lands.
 - **Hover any dot** to freeze it and inspect that exact transaction (ID, fee in ℏ and USD, memo, success/failure), with a link to view it on [HashScan](https://hashscan.io).
 - **Fee revenue, daily pace, HBAR price, and a "while you've watched" tally** in the status bar, plus a per-block throughput sparkline.
 
