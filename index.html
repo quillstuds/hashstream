@@ -649,7 +649,7 @@ function reflow(o){
     }else{
       if(o.ambient||p.by==null){
         p.by=laneY(p.li)+(Math.random()*2-1)*laneH*0.33;
-        p.ph=Math.random()*6.283;p.am=0.6+Math.random()*2.2;p.big=p.fee>=BIG_FEE;
+        p.ph=Math.random()*6.283;p.big=p.fee>=BIG_FEE;
       }else p.by=g.TOP+(p.by-o.TOP)*g.laneH/o.laneH;
       p.x=g.x0+prog*(g.x1-g.x0);p.y=p.by;p.vx=(g.x1-g.x0)/secs;p.vy=0;
     }
@@ -720,9 +720,9 @@ function pushParticle(li,color,r,fee,tx,tr){
     p={x:Math.random()*W,y:-30,vx:0,vy:(H+60)/(tr*jit),c:color,r,fee,tx,li,fl:Math.random()*6.283,big:fee>=BIG_FEE,age:0,wt:0};
   }else{
     // Tight speed spread keeps each block's dots travelling together between
-    // its boundary markers; a gentle per-dot sway makes the lanes read as a current.
+    // its boundary markers.
     const x0=riverX0(),x1=riverX1(),jit=0.97+Math.random()*0.06,by=laneY(li)+(Math.random()*2-1)*laneH*0.33;
-    p={x:x0,y:by,by,vx:(x1-x0)/(tr*jit),vy:0,c:color,r,fee,tx,li,ph:Math.random()*6.283,am:0.6+Math.random()*2.2,
+    p={x:x0,y:by,by,vx:(x1-x0)/(tr*jit),vy:0,c:color,r,fee,tx,li,ph:Math.random()*6.283,
        big:fee>=BIG_FEE,age:0,wt:0};
   }
   particles.push(p);
@@ -1545,7 +1545,6 @@ function frame(t){
         p.age+=dt;
         if(p!==hoverP){
           p.wt+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;
-          if(!ambient)p.y=p.by+Math.sin(p.x*0.016+p.ph+p.wt*1.1)*p.am;
         }
         if(ambient?p.y>=H+30:p.x>=x1){
           arrivals++;
