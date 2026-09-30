@@ -372,7 +372,7 @@ body.network .netpanel{display:block}
   <div id="netlist"></div>
   <div class="nplg">
     <div class="nplr" id="nplr"></div>
-    <div class="npnote">Small stars are accounts paying for transactions. Each dot flies from the payer to what it touched; colour is the transaction type. Every block ripples out from the ℏ core.</div>
+    <div class="npnote">Small stars are accounts paying for transactions. Each dot flies from the payer to what it touched; colour is the transaction type.</div>
   </div>
 </div>
 
@@ -459,7 +459,7 @@ body.network .netpanel{display:block}
         <li><span class="di"></span><span><b>Small stars are accounts</b> — each one is paying for transactions right now.</span></li>
         <li><span class="di"></span><span><b>Larger shapes are what those accounts are using</b>: topics <span class="akg" data-k="topic"></span> (Consensus Service message feeds), contracts <span class="akg" data-k="contract"></span> (smart contracts), tokens <span class="akg" data-k="token"></span> (fungible tokens and NFTs) and accounts <span class="akg" data-k="account"></span> (receiving HBAR). The busier it is, the bigger it gets; its colour is the kind of transaction it mostly receives, matching the Lanes view.</span></li>
         <li><span class="di"></span><span><b>Every moving dot is one transaction</b>, flying from the account that paid for it to the thing it touched. Lines show who has been talking to whom recently.</span></li>
-        <li><span class="di"></span><span><b>The <span class="akg" data-k="core"></span> core</b> in the middle is the network itself. Transactions without a single destination — such as Ethereum-format transactions — fly into it, and every couple of seconds a ripple spreads out as a new block is sealed.</span></li>
+        <li><span class="di"></span><span><b>The <span class="akg" data-k="core"></span> core</b> in the middle is the network itself. Transactions without a single destination — such as Ethereum-format transactions — fly into it. Hover it to see the latest block.</span></li>
         <li><span class="di"></span><span>The map covers roughly the <b>last 20 seconds</b> — anything that goes quiet fades away, and newcomers appear as they start transacting.</span></li>
       </ul>
       <h3>Reading the patterns</h3>
@@ -1146,15 +1146,14 @@ function netDraw(t,dt,sim){
     ctx.beginPath();ctx.arc(core.x,core.y,R0*i*0.34,0,6.283);ctx.stroke();
   }
 
-  // Block ripples: each record file sealed sends a consensus wave outwards.
+  // Arrival ripples: a small ring where a transaction lands.
   ctx.globalCompositeOperation='lighter';
   for(let i=net.ripples.length-1;i>=0;i--){
     const r=net.ripples[i],u=(now-r.t0)/r.life;
     if(u>=1){net.ripples.splice(i,1);continue;}
     if(u<0)continue;
-    const rad=r.core?core.rad+u*R0*1.5:r.r0+u*r.grow,x=r.core?core.x:r.x,y=r.core?core.y:r.y;
-    ctx.globalAlpha=(1-u)*(1-u)*(r.core?0.4:0.55);ctx.strokeStyle=r.c;ctx.lineWidth=r.core?1.6:1.2;
-    ctx.beginPath();ctx.arc(x,y,rad,0,6.283);ctx.stroke();
+    ctx.globalAlpha=(1-u)*(1-u)*0.55;ctx.strokeStyle=r.c;ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.arc(r.x,r.y,r.r0+u*r.grow,0,6.283);ctx.stroke();
   }
 
   // Links, brighter the busier.
@@ -1443,7 +1442,6 @@ function frame(t){
         const m=markQueue[mqHead++],late=(t-m.at)/1000;
         if(late>tr)continue;
         net.block={num:m.num,n:m.n};
-        if(network){net.ripples.push({core:true,t0:net.clock-late*1000,life:1800,c:'#a78bfa'});net.core.flash=1;}
       }
     }else if(paused){
       // Anything that comes due while paused is never shown — skip it.

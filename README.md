@@ -26,7 +26,7 @@ All data comes live from the public Hedera mirror node — no backend, no build 
 ## Views
 
 - **Lanes** — the transaction river described above, one lane per transaction type.
-- **Network** — a live map of *who is transacting with what*. Paying accounts are small stars; the topics (◯), contracts (⬡), tokens (◇) and accounts (●) they touch are larger bodies, sized by how busy they are and coloured by the transaction type they mostly receive. Every transaction flies from payer to destination along a curved link, a force layout clusters accounts around what they use (so bots, busy dApps and token hubs show up as structure), and each block sends a ripple out from the ℏ core. A side panel lists the busiest destinations by name — token names and topic/contract memos are looked up from the mirror node — and hovering anything shows what it is, its rate and its main counterparty, with a HashScan link.
+- **Network** — a live map of *who is transacting with what*. Paying accounts are small stars; the topics (◯), contracts (⬡), tokens (◇) and accounts (●) they touch are larger bodies, sized by how busy they are and coloured by the transaction type they mostly receive. Every transaction flies from payer to destination along a curved link, a force layout clusters accounts around what they use (so bots, busy dApps and token hubs show up as structure). A side panel lists the busiest destinations by name — token names and topic/contract memos are looked up from the mirror node — and hovering anything shows what it is, its rate and its main counterparty, with a HashScan link.
 - **Ambient** — a calm full-screen meteor shower for a second screen.
 
 All three replay the same stream on the same clock, so the headline TPS always counts the dots currently in view.
