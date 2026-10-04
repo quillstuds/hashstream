@@ -646,7 +646,6 @@ let cursorTs=null,lastBlockNum=0,rateAt=0,lagHist=[],playDelay=0,delayPad=2,poll
 // same events give the headline rate (dots still crossing the screen) and the
 // 30s lane stats, so every number on screen is counted from the dots you see.
 let dlog=[],hHead=0,sHead=0,logFirst=0,logLast=0,statFee=0;
-let flowOff=0;
 const EMBER_CAP=1400;
 let txWatched=0,feesWatched=0,paused=false,arrivals=0,ambient=false,network=false,mode='lanes';
 let mouse={x:-99,y:-99},hoverP=null,tipHover=false,tipHideT=0;
@@ -1559,15 +1558,6 @@ function frame(t){
       ctx.beginPath();ctx.moveTo(0,bandY1);ctx.lineTo(W,bandY1);ctx.stroke();
 
       ctx.globalCompositeOperation='lighter';
-      // Flowing lane tracks: a dotted centre line drifting right at dot speed.
-      if(sim)flowOff=(flowOff+(x1-x0)/tr*dt)%26;
-      ctx.lineCap='round';ctx.lineWidth=isMobile?1.2:1.6;ctx.setLineDash([0.01,26]);ctx.lineDashOffset=-flowOff;
-      for(const l of lanes){
-        const y=laneY(l.i);
-        ctx.strokeStyle=hexToRgba(l.color,0.1+l.flash*0.12);
-        ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();
-      }
-      ctx.setLineDash([]);ctx.lineCap='butt';ctx.lineDashOffset=0;
       // Entry portals: a soft slit of light per lane that flares as dots are born.
       for(const l of lanes){
         ctx.globalAlpha=0.08+l.flash*0.6;
