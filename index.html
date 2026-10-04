@@ -26,7 +26,7 @@
 :root{
   --bg:#06060d; --panel:rgba(16,16,28,0.55); --panel-border:rgba(255,255,255,0.09);
   --text:#eef0f6; --muted:#8b90a5; --faint:#5a5f74;
-  --accent:#a78bfa; --green:#34d399; --red:#f87171;
+  --accent:#a78bfa; --green:#34d399; --amber:#fbbf24; --red:#f87171;
   --bar:0px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -39,6 +39,14 @@ body{
 .num{font-family:'Space Grotesk',monospace;font-variant-numeric:tabular-nums}
 #river{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;cursor:default;touch-action:manipulation}
 body.ambient #river{background:var(--bg)}
+/* Lane label column toggle (lanes view only): the whole column is the hit area, with a chevron in its corner */
+.lanetog{position:fixed;z-index:2;display:none;padding:0;background:none;border:none;border-radius:12px;cursor:pointer;transition:background .2s}
+body:not(.network):not(.ambient) .lanetog{display:block}
+.lanetog:hover{background:rgba(255,255,255,0.025)}
+.lanetog:focus-visible{outline:1px solid rgba(167,139,250,0.6);outline-offset:-1px}
+.lanetog svg{position:absolute;bottom:4px;right:4px;width:16px;height:16px;color:var(--faint);transition:color .2s,transform .3s}
+.lanetog:hover svg,.lanetog:focus-visible svg{color:var(--text)}
+body.lanes-min .lanetog svg{transform:rotate(180deg)}
 
 .hud{position:fixed;z-index:5;pointer-events:none}
 .hud *{pointer-events:auto}
@@ -52,7 +60,9 @@ body.ambient #river{background:var(--bg)}
 .brand h1 .accent{font-weight:600;background:linear-gradient(95deg,#8b5cf6,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .brand p{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:1px}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green);animation:pulse 2s ease-in-out infinite}
+.dot.stale{background:var(--amber);box-shadow:0 0 9px var(--amber)}
 .dot.err{background:var(--red);box-shadow:0 0 9px var(--red)}
+body.stale .tps .l,body.stale .ambient-tps .l{color:var(--amber)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
 .tps{top:calc(16px + var(--bar));left:50%;transform:translateX(-50%);text-align:center;padding:10px 34px 12px}
@@ -146,7 +156,7 @@ body.ambient #topbar,html:fullscreen #topbar{display:none!important}
   background:none;border:none;border-radius:7px;color:var(--faint);cursor:pointer;transition:background .2s,color .2s}
 #promo .px:hover{background:rgba(255,255,255,0.08);color:var(--text)}
 #promo .px svg{width:13px;height:13px}
-body.ambient #promo,html:fullscreen #promo{display:none!important}
+html:fullscreen #promo{display:none!important}
 
 .ambient-tps{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:4;text-align:center}
 .ambient-tps,.ambient-tps *{pointer-events:none}
@@ -238,11 +248,11 @@ body.network .netpanel{display:block}
   .btn .blab{display:none}
   .btn .bic svg{width:18px;height:18px}
 
-  .statbar{left:0;right:0;bottom:0;padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));gap:7px;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;align-items:stretch;scrollbar-width:none;-webkit-overflow-scrolling:touch;pointer-events:auto;touch-action:pan-x}
-  .statbar::-webkit-scrollbar{display:none}
-  .chips{flex-wrap:nowrap;gap:7px}
-  .chip{flex:none;padding:6px 11px;font-size:10px;white-space:nowrap;border-radius:11px}
-  .chip b{font-size:13px}
+  /* The chips share the full width instead of scrolling; HBAR price drops out below 480px */
+  .statbar{left:0;right:0;bottom:0;padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));gap:7px;flex-wrap:nowrap;justify-content:flex-start;align-items:stretch;pointer-events:auto}
+  .chips{flex:1;min-width:0;flex-wrap:nowrap;gap:7px}
+  .chip{flex:1 1 auto;min-width:0;padding:6px 10px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:11px}
+  .chip b{font-size:13px;overflow:hidden;text-overflow:ellipsis}
   .chip[data-tip]::after,.chip[data-tip]::before{display:none}
   #sparkbox{display:none}
   .caption{font-size:10px;gap:6px;bottom:0;padding:4px 8px max(5px,env(safe-area-inset-bottom))}
@@ -259,6 +269,8 @@ body.network .netpanel{display:block}
   #about .acard{padding:24px 20px 20px}
   #about h2{font-size:18px}
 }
+@media(max-width:480px){.chip-px{display:none}}
+@media(max-width:360px){.statbar{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right));gap:6px}.chips{gap:6px}.chip{padding:6px 8px}}
 #offline{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;
   background:rgba(6,6,13,0.74);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);padding:24px;text-align:center}
 #offline .ocard{max-width:390px;padding:32px 32px 26px;border-radius:20px;background:var(--panel);border:1px solid var(--panel-border);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 24px 70px rgba(0,0,0,0.55)}
@@ -299,9 +311,12 @@ body.network .netpanel{display:block}
 </head>
 <body>
 <canvas id="river" role="img" aria-label="Full-screen animated stream of glowing dots, one per real Hedera mainnet transaction, flowing rightward across the screen; lanes are transaction types, dot size reflects fee paid; hover or tap a dot to inspect that transaction"></canvas>
+<button class="lanetog" id="laneTog" type="button" aria-label="Collapse lane labels" aria-pressed="false" title="Collapse lane labels">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+</button>
 
 <div id="topbar" role="region" aria-label="Announcement">
-  <div class="tbin"><span class="udot"></span><span class="tbtxt"><span class="tblead">Let's bring the Hedera network out of stealth. </span>Join the <b>Unstealth</b> private beta.</span><a class="tbgo" id="bar-unst" href="#" target="_blank" rel="noopener">Learn more →</a></div>
+  <div class="tbin"><span class="udot"></span><span class="tbtxt"><span class="tblead">Who's really behind these transactions? </span><b>Unstealth</b> puts names to Hedera's traffic.</span><a class="tbgo" id="bar-unst" href="#" target="_blank" rel="noopener">Join the beta →</a></div>
   <button class="tbx" id="bar-x" type="button" aria-label="Dismiss announcement">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12 M18 6l-12 12"/></svg>
   </button>
@@ -357,7 +372,7 @@ body.network .netpanel{display:block}
   <div class="chips">
     <div class="chip glass" tabindex="0" data-tip="Fees the network is collecting in USD — the last 30 seconds of the stream projected to one hour.">Fee revenue<b class="num" id="s-rev">—</b></div>
     <div class="chip glass" tabindex="0" data-tip="Transactions the network would process in 24 hours at its average rate over the last ~100 blocks.">Daily pace<b class="num" id="s-day">—</b></div>
-    <div class="chip glass" tabindex="0" data-tip="Live HBAR price in USD, used to convert transaction fees into dollars.">HBAR price<b class="num" id="s-px">—</b></div>
+    <div class="chip glass chip-px" tabindex="0" data-tip="Live HBAR price in USD, used to convert transaction fees into dollars.">HBAR price<b class="num" id="s-px">—</b></div>
     <div class="chip glass" tabindex="0" data-tip="Transactions and fees that have flowed past since you opened HashStream.">While you've watched<b class="num" id="s-watch">0 tx · $0.0000</b></div>
   </div>
   <div class="glass" id="sparkbox" tabindex="0" data-tip="Transactions per second in each of the most recent blocks.">
@@ -398,9 +413,9 @@ body.network .netpanel{display:block}
   <button class="px" id="promo-x" type="button" aria-label="Dismiss">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12 M18 6l-12 12"/></svg>
   </button>
-  <div class="pe"><span class="udot"></span>Private beta · October</div>
-  <h3>Unstealth beta</h3>
-  <p>Crowdsourced intelligence platform for the Hedera network built to allow the community to understand exactly who and what is driving transactions and revenue.</p>
+  <div class="pe"><span class="udot"></span>Unstealth · Private beta</div>
+  <h3>Interested in identifying Hedera use cases?</h3>
+  <p>Help the community identify who and what is driving transaction and revenue growth. Join the private beta to get early access to research tools and guide app development.</p>
   <a class="pgo" id="promo-go" href="#" target="_blank" rel="noopener"></a>
 </aside>
 
@@ -500,14 +515,16 @@ body.network .netpanel{display:block}
 <script>
 const API='https://mainnet-public.mirrornode.hedera.com';
 const POLL_MS=1500;          // the mirror node ingests a ~2s record file at a time
+const STALE_SECS=30;         // newest block older than this → warn that the feed is delayed
 const MAX_PAGES=8;           // per-poll detail cap; beyond it dots come from block totals
 const MAX_CONCURRENT=4500;
 const BIG_FEE=5e6;           // ≥0.05ℏ — drawn as a flare
 const STAT_WIN=30;           // seconds of stream behind the lane stats and fee revenue
 // Unstealth beta promo: the top bar and a pop-up card share this link. The card
-// shows at most once every `everyHours`; bump `key` to show it to everyone
-// straight away (e.g. when the beta goes live).
-const PROMO={url:'https://unstealth.app',cta:'Learn more ↗',key:'hs-promo-unstealth-1',afterSecs:50,everyHours:24};
+// shows at most once every `everyHours`, and a dismissed top bar comes back after
+// the same gap; bump `key` to show both to everyone straight away (e.g. when the
+// beta goes live).
+const PROMO={url:'https://unstealth.app',cta:'Request beta access ↗',key:'hs-promo-unstealth-1',afterSecs:30,everyHours:12};
 const STRESS=Math.min(5000,parseFloat(new URLSearchParams(location.search).get('stress'))||0);
 const $=id=>document.getElementById(id);
 
@@ -599,6 +616,11 @@ function flare(color){
 
 const SHORT={CONSENSUSSUBMITMESSAGE:'HCS messages',CONTRACTCALL:'Contract call',ETHEREUMTRANSACTION:'Ethereum tx',CRYPTOCREATEACCOUNT:'Account create',CRYPTOAPPROVEALLOWANCE:'Approve',TOKENASSOCIATE:'Token assoc.',OTHER:'Other'};
 const laneName=l=>isMobile?(SHORT[l.type]||l.label):l.label;
+// Collapsed lane column: a short badge per lane instead of its name.
+const ABBR={CRYPTOTRANSFER:'CT',CONTRACTCALL:'SC',CONSENSUSSUBMITMESSAGE:'HCS',ETHEREUMTRANSACTION:'ETH',OTHER:'OTH'};
+const laneAbbr=l=>ABBR[l.type]||l.label.replace(/\(.*\)/,'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,3).toUpperCase();
+let lanesMin=false;
+try{lanesMin=localStorage.getItem('hs-lanes-min')==='1';}catch(e){}
 
 const cv=$('river'),ctx=cv.getContext('2d');
 // Bloom: the frame is downsampled into two small buffers, blurred, and added
@@ -657,7 +679,8 @@ function layout(old=geom()){
   const dpr=window.devicePixelRatio||1;
   W=innerWidth;H=innerHeight;
   isMobile=W<=760;
-  LABEL_W=isMobile?138:230;
+  LABEL_W=lanesMin?(isMobile?58:110):(isMobile?138:230);
+  document.body.classList.toggle('lanes-min',lanesMin);
   cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
   ctx.setTransform(dpr,0,0,dpr,0,0);
   bloomA.width=Math.max(1,Math.ceil(cv.width/4));bloomA.height=Math.max(1,Math.ceil(cv.height/4));
@@ -679,12 +702,17 @@ function layout(old=geom()){
     $('promo').style.bottom=(sbH+30)+'px';
   }
   laneH=Math.max((H-TOP-BOT)/Math.max(lanes.length,3),46);
+  const tg=$('laneTog');
+  tg.style.left='0px';tg.style.top=TOP+'px';
+  tg.style.width=(riverX0()-4)+'px';tg.style.height=laneH*lanes.length+'px';
   const np=$('netpanel');np.style.top=TOP+'px';np.style.maxHeight=Math.max(120,H-TOP-BOT)+'px';
   const sp=$('spark'),r=sp.getBoundingClientRect();
   sp.width=Math.round(r.width*dpr);sp.height=Math.round(34*dpr);
   sp.getContext('2d').setTransform(dpr,0,0,dpr,0,0);
   drawSpark();
   if(lanes.length)buildLegend();
+  // In ambient the stat bar is hidden, so the Unstealth card sits just above the legend instead.
+  if(ambient)$('promo').style.bottom=(H-document.querySelector('.legend').getBoundingClientRect().top+10)+'px';
   reflow(old);
 }
 window.addEventListener('resize',()=>layout());
@@ -1719,6 +1747,20 @@ function frame(t){
         // Rate and share count this lane's dots on screen now (they sum to the
         // headline); $/hr uses 30s so a single large fee doesn't whipsaw it.
         const lr=l.disp,share=dlog.length>hHead?l.w/(dlog.length-hHead)*100:0,usd=l.fee/1e8*usdPerHbar/span*3600;
+        if(lanesMin){
+          // Collapsed: a badge in the lane's colour, then just its rate.
+          const ab=laneAbbr(l);
+          ctx.font=isMobile?'600 10.5px "Space Grotesk"':'600 12px "Space Grotesk"';
+          const bh=isMobile?17:20,bw=ctx.measureText(ab).width+(isMobile?10:12),by=ty-(isMobile?6:7)-bh;
+          ctx.beginPath();ctx.roundRect(lblX,by,bw,bh,6);
+          ctx.fillStyle=hexToRgba(l.color,0.16);ctx.fill();
+          ctx.strokeStyle=hexToRgba(l.color,0.6);ctx.lineWidth=1;ctx.stroke();
+          ctx.fillStyle='rgba(238,240,246,0.95)';ctx.textAlign='center';
+          ctx.fillText(ab,lblX+bw/2,by+bh/2+(isMobile?3.5:4.2));ctx.textAlign='left';
+          ctx.fillStyle='rgba(139,144,165,0.85)';ctx.font=isMobile?'10px "Space Grotesk"':'11.5px "Space Grotesk"';
+          ctx.fillText(fmtNum(lr)+'/s',lblX,ty+(isMobile?8:9));
+          continue;
+        }
         ctx.fillStyle='rgba(238,240,246,0.9)';ctx.font=isMobile?'500 12px Inter':'500 13px Inter';
         ctx.fillText(laneName(l),lblX,ty-(isMobile?8:9));
         ctx.fillStyle='rgba(139,144,165,0.85)';ctx.font=isMobile?'10px "Space Grotesk"':'11.5px "Space Grotesk"';
@@ -1727,7 +1769,9 @@ function frame(t){
         ctx.fillText(stats,lblX,ty+(isMobile?8:9));
       }
     }
-    if(sim)$('s-watch').textContent=fmtInt(txWatched)+' tx · $'+feesWatched.toFixed(4);
+    // Compact on phones so the chip keeps its width however long they've watched.
+    if(sim)$('s-watch').textContent=isMobile?compact(txWatched)+' tx · '+fmtUsd(feesWatched)
+                                            :fmtInt(txWatched)+' tx · $'+feesWatched.toFixed(4);
   }
   requestAnimationFrame(frame);
 }
@@ -1748,6 +1792,16 @@ function noteFail(e){
   if(failStreak>=FAIL_LIMIT)setOffline(true,'Reconnecting… ('+e.message+')');
 }
 function noteOk(){failStreak=0;$('dot').classList.remove('err');setOffline(false);}
+let stale=false;
+const fmtAgo=s=>s<90?Math.round(s)+'s':s<5400?Math.round(s/60)+' min':(s/3600).toFixed(1)+' h';
+function noteStale(age){
+  document.body.classList.toggle('stale',stale);
+  $('dot').classList.toggle('stale',stale);
+  $('dot').title=stale?'The Hedera mirror node has stopped delivering new blocks':'';
+  if(stale)$('status').textContent='Mirror node delayed · last block '+fmtAgo(age)+' ago';
+  const lbl=stale?'data delayed · '+fmtAgo(age):'transactions / sec';
+  document.querySelectorAll('.tps .l,.ambient-tps .l').forEach(el=>{if(el.textContent!==lbl)el.textContent=lbl;});
+}
 
 let busy=false;
 async function run(){
@@ -1755,7 +1809,12 @@ async function run(){
   try{
     await poll();
     noteOk();
-    $('status').textContent=STRESS?('Hedera mainnet · stress +'+fmtInt(STRESS)+'/s'):'Hedera mainnet · live';
+    // The mirror node can stall while still answering every request, so check
+    // the age of the newest block rather than relying on fetch errors.
+    const nb=blockHist[blockHist.length-1],age=nb?Date.now()/1000-parseFloat(nb.timestamp.to):0;
+    stale=stale?age>STALE_SECS/2:age>STALE_SECS;
+    noteStale(age);
+    if(!stale)$('status').textContent=STRESS?('Hedera mainnet · stress +'+fmtInt(STRESS)+'/s'):'Hedera mainnet · live';
   }catch(e){
     noteFail(e);
   }
@@ -1765,6 +1824,18 @@ const IC_PAUSE='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
 const IC_PLAY='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.6c0-.86.94-1.38 1.67-.93l8.7 5.4a1.1 1.1 0 0 1 0 1.86l-8.7 5.4A1.1 1.1 0 0 1 8 18.4z"/></svg>';
 const IC_FS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4 M15 4h4a1 1 0 0 1 1 1v4 M20 15v4a1 1 0 0 1-1 1h-4 M9 20H5a1 1 0 0 1-1-1v-4"/></svg>';
 const IC_EXIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4v3a1 1 0 0 1-1 1H4 M16 4v3a1 1 0 0 0 1 1h3 M16 20v-3a1 1 0 0 1 1-1h3 M8 20v-3a1 1 0 0 0-1-1H4"/></svg>';
+function syncLaneTog(){
+  const t=lanesMin?'Expand lane labels':'Collapse lane labels';
+  $('laneTog').setAttribute('aria-label',t);$('laneTog').title=t;
+  $('laneTog').setAttribute('aria-pressed',lanesMin?'true':'false');
+}
+syncLaneTog();
+$('laneTog').addEventListener('click',()=>{
+  const old=geom();
+  lanesMin=!lanesMin;
+  try{localStorage.setItem('hs-lanes-min',lanesMin?'1':'0');}catch(e){}
+  syncLaneTog();layout(old);
+});
 $('pauseBtn').addEventListener('click',()=>{
   paused=!paused;
   $('pauseBtn').querySelector('.bic').innerHTML=paused?IC_PLAY:IC_PAUSE;
@@ -1824,37 +1895,40 @@ $('about-done').addEventListener('click',()=>showAbout(false));
 aboutEl.addEventListener('click',e=>{if(e.target===aboutEl)showAbout(false);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&aboutEl.style.display==='flex')showAbout(false);});
 
-// Unstealth beta card: appears after about a minute of actually watching (never
-// in ambient or fullscreen, never over a dialog), then rests for PROMO.everyHours
+// Unstealth beta card: appears after PROMO.afterSecs of actually watching, in any
+// view (switching views doesn't reset the count; never in fullscreen or over a
+// dialog), then rests for PROMO.everyHours
 // — whether it was closed, clicked or ignored. Clicking the top bar's link
-// counts as having seen it.
-const promoEl=$('promo');
-let promoSecs=0,promoDone=false;
+// counts as having seen it. Both are re-checked every second, so a tab left open
+// gets them back too.
+const promoEl=$('promo'),BAR_KEY=PROMO.key+'-bar';
+const promoAt={};   // in-memory fallback when localStorage is unavailable
+let promoSecs=0;
 $('bar-unst').href=$('promo-go').href=PROMO.url;
 $('promo-go').textContent=PROMO.cta;
-try{promoDone=Date.now()-(+localStorage.getItem(PROMO.key)||0)<PROMO.everyHours*3600e3;}catch(e){}
-function notePromoSeen(){promoDone=true;try{localStorage.setItem(PROMO.key,String(Date.now()));}catch(e){}}
+function promoLast(k){let t=0;try{t=+localStorage.getItem(k)||0;}catch(e){}return Math.max(t,promoAt[k]||0);}
+function promoStamp(k){promoAt[k]=Date.now();try{localStorage.setItem(k,String(promoAt[k]));}catch(e){}}
+const promoDue=k=>Date.now()-promoLast(k)>=PROMO.everyHours*3600e3;
 function hidePromo(){
   promoEl.classList.remove('show');
   setTimeout(()=>{promoEl.style.display='none';},600);
 }
 ['promo-x','promo-go'].forEach(id=>$(id).addEventListener('click',hidePromo));
-$('bar-unst').addEventListener('click',()=>{notePromoSeen();if(promoEl.classList.contains('show'))hidePromo();});
-// The top bar stays until its own × is pressed (remembered under the same key + '-bar').
-let barOff=false;
-try{barOff=localStorage.getItem(PROMO.key+'-bar')==='done';}catch(e){}
-function setBar(on){document.body.classList.toggle('hasbar',on);layout();}
-setBar(!barOff);
-$('bar-x').addEventListener('click',()=>{try{localStorage.setItem(PROMO.key+'-bar','done');}catch(e){}setBar(false);});
-const promoTimer=setInterval(()=>{
-  if(promoDone){clearInterval(promoTimer);return;}
-  if(document.hidden||ambient||document.fullscreenElement||!booted||
+$('bar-unst').addEventListener('click',()=>{promoStamp(PROMO.key);if(promoEl.classList.contains('show'))hidePromo();});
+// The top bar stays until its own × is pressed, then rests for PROMO.everyHours.
+function setBar(on){if(document.body.classList.contains('hasbar')!==on){document.body.classList.toggle('hasbar',on);layout();}}
+document.body.classList.toggle('hasbar',promoDue(BAR_KEY));layout();
+$('bar-x').addEventListener('click',()=>{promoStamp(BAR_KEY);setBar(false);});
+setInterval(()=>{
+  if(promoDue(BAR_KEY))setBar(true);
+  if(!promoDue(PROMO.key)){promoSecs=0;return;}
+  if(document.hidden||document.fullscreenElement||!booted||
      aboutEl.style.display==='flex'||$('offline').style.display==='flex')return;
-  if(++promoSecs===PROMO.afterSecs){
-    notePromoSeen();
+  if(++promoSecs>=PROMO.afterSecs){
+    promoSecs=0;
+    promoStamp(PROMO.key);
     promoEl.style.display='block';
     requestAnimationFrame(()=>requestAnimationFrame(()=>promoEl.classList.add('show')));
-    clearInterval(promoTimer);
   }
 },1000);
 
